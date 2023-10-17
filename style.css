@@ -1,0 +1,87 @@
+body {
+  background-color: #f2f2f2;
+}
+
+/* ============================= Styling for navigation bar ============================= */
+.nav-link {
+  transition: background-color 0.3s !important;
+}
+
+.nav-link:hover {
+  background-color: #043f9d;
+  color: white !important;
+}
+
+.nav-link:hover.text-danger {
+  background-color: #dc3545;
+  color: white !important;
+}
+
+/* ========================== Styling for the module video ========================== */
+video {
+  width: 80vw;
+  height: 60vh;
+}
+
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+  margin-top: 0;
+}
+
+.video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========================== Styling for Call To Action button ========================== */
+
+.CTA-btn {
+  transition: background-color 0.3s ease;
+}
+
+.CTA-btn:hover {
+  color: #043f9d !important;
+  background-color: #f2f2f2 !important;
+}
+
+/* ========================== Styling for the card height ========================== */
+
+.card-body-fixed-height {
+  height: 200px; /* Set the desired fixed height for the card body */
+  overflow: hidden; /* Hide overflow content if the description is too long */
+  background-color: black;
+}
+
+/* ========================== Styling for Signature button ========================== */
+.signature-btn {
+  background-color: #043f9d;
+  color: white;
+  transition: 0.3s ease !important;
+}
+
+.signature-btn:hover {
+  background-color: #3665b1;
+  color: white;
+}
+
+/* ========================== Styling for Signature background color ========================== */
+
+.signature-bg-color {
+  background-color: #043f9d;
+}
+
+.signature-color {
+  color: #043f9d;
+}
+
+/* ========================== Styling for Root properties (Invalid Message) ========================= */
+:root {
+  --bs-form-invalid-border-color: #54b4d3;
+  --bs-form-invalid-color: #54b4d3;
+}
