@@ -100,9 +100,6 @@ $licenseQueryResult = $conn->query($licenseQuery);
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
-    <<<<<<< HEAD=======<!-- Internal CSS for the HTML -->
-
-        >>>>>>> 1235fda0ab9127b9e587937e0b6f7e3e23145d6d
 
         <!-- Title of the page -->
         <title> Profile </title>
@@ -198,8 +195,7 @@ $licenseQueryResult = $conn->query($licenseQuery);
                             </div>
                         </div>
                     </div>
-
-                    <<<<<<< HEAD=======>>>>>>> 1235fda0ab9127b9e587937e0b6f7e3e23145d6d
+                
                         <div class="card col-md-7 m-1 shadow">
                             <div class="card-body">
                                 <h2>History</h2>
