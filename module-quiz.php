@@ -48,8 +48,38 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 </head>
 
 <body class="d-flex flex-column min-vh-100">
+  <!-- navigation bar -->
+  <nav class="navbar navbar-expand-lg shadow-sm bg-light" style="height: 55px;">
+    <div class="container-fluid">
+      <!-- Image visible on small screens (Hamburger Menu Button is there) -->
+      <div class="d-block d-lg-none">
+        <div class="d-flex align-items-center hstack gap-3">
+          <a href="index.php">
+            <img src="Images/FE-logo.png" alt="Logo" class="img-fluid" style="max-height: 30px;">
+          </a>
+          <div class="vr signature-color" style="border: 1px solid"></div>
+          <div>
+            <h3 class="my-auto signature-color fw-bold">Module Training</h3>
+          </div>
+        </div>
+      </div>
 
-  <?php require_once("nav-bar.php"); ?>
+      <!-- Collapsible Navigation Links -->
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <!-- Website Logo -->
+        <div class="d-none d-lg-block">
+          <div class="d-flex align-items-center hstack gap-3">
+            <a href="index.php">
+              <img src="Images/FE-logo.png" alt="Logo" class="img-fluid" style="max-height: 30px;">
+            </a>
+            <div class="vr signature-color" style="border: 1px solid"></div>
+            <div>
+              <h3 class=" my-auto signature-color fw-bold">Module Training</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+  </nav>
 
   <!-- ================================================================================== -->
 
@@ -244,7 +274,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
             // Check if the query was successful
             if ($stmt->affected_rows <= 0) {
-              echo "<p>Error updating result_id in user_answers table</p>";
+              echo "<p>Error updatinregarding lig result_id in user_answers table</p>";
             }
           } else {
             echo "<p>Error storing quiz results: " . $conn->error . "</p>";

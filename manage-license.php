@@ -372,7 +372,6 @@ $conn->close();
                     <div class="d-flex align-items-center">
                         <h4 class="my-0">All Licenses</h4>
                     </div>
-
                     <a type="button" class="btn btn-dark" href="licenses.php">
                         Manage License
                     </a>

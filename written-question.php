@@ -25,20 +25,18 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 $select_query = "SELECT * FROM written_questions WHERE module_id = 1";
 $select_result = $conn->query($select_query);
 
-$_SESSION['employee_id'] = 111;
+$_SESSION['employee_id'] = 222;
 $employee_id = $_SESSION['employee_id'];
 
-// Process form submission
 if (isset($_POST['submitAnswers'])) {
-    $questionNumber = 1;
-    $select_result = $conn->query($select_query); // Execute the query again to reset the pointer
+    $select_result = $conn->query($select_query);
+    $questionNumber = 1; // Initialize the question counter outside the loop
 
     while ($row = $select_result->fetch_assoc()) {
         $answer = $_POST['answer' . $questionNumber];
 
-        // Check if 'written_question_id' exists in the $row array
         if (isset($row['written_question_id']) && isset($_SESSION['employee_id'])) {
-            $insert_query = "INSERT INTO written_answers (written_answer, written_question_id, employee_id, module_id) VALUES (?, ?, ?, 1)";
+            $insert_query = "INSERT INTO written_answers (written_answer, written_question_id, employee_id, module_id, datetime) VALUES (?, ?, ?, 1, NOW())";
             $stmt = $conn->prepare($insert_query);
             if ($stmt) {
                 $stmt->bind_param("sii", $answer, $row['written_question_id'], $_SESSION['employee_id']);
@@ -54,8 +52,10 @@ if (isset($_POST['submitAnswers'])) {
         } else {
             // Handle any error or log that 'written_question_id' or 'employee_id' is missing
         }
-        $questionNumber++;
+        $questionNumber++; // Increment the question counter
     }
+
+    header("Location: written-question-list.php");
     exit();
 }
 ?>
@@ -78,16 +78,17 @@ if (isset($_POST['submitAnswers'])) {
 
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-10"> <!-- Adjust the column width as needed -->
-                <div class="card mb-5 mt-5">
+            <div class="col-md-10">
+                <div class="card mt-5 mb-5">
                     <div class="card-body">
-                        <form method="post">
+                        <form method="POST">
                             <?php
                             $questionNumber = 1;
-                            echo "<h1 class='text-center'>Written Quiz</h1>";
+                            echo "<h1 class='text-center'> Written Quiz </h1>";
                             while ($row = $select_result->fetch_assoc()) {
-                                echo "<h5 class='card-title mt-5'>Question $questionNumber:</h5>";
-                                echo "<p class='card-text'>" . $row['question'] . "</p>";
+                                echo "<p class='card-title mt-5'> Question $questionNumber: </p>";
+                                // echo "<p class='card-text'> Question Id: " . $row['written_question_id'] . "</p>";
+                                echo "<p class='card-text'><h4>" . $row['question'] . "</h4></p>";
                                 echo "<div class='mb-3'>";
                                 echo "<label for='answerInput$questionNumber' class='form-label'><strong>Your Answer:</strong></label>";
                                 echo "<textarea class='form-control' name='answer$questionNumber' id='answerInput$questionNumber' rows='3'></textarea>";
@@ -96,7 +97,7 @@ if (isset($_POST['submitAnswers'])) {
                             }
                             ?>
                             <div class="d-flex justify-content-center">
-                                <button type="submit" name="submitAnswers" class="btn btn-dark">Submit Answers</button>
+                                <button type="submit" name="submitAnswers" class="btn btn-dark"> Submit Answers</button>
                             </div>
                         </form>
                     </div>
