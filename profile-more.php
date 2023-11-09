@@ -100,12 +100,9 @@ $licenseQueryResult = $conn->query($licenseQuery);
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
-    <<<<<<< HEAD=======<!-- Internal CSS for the HTML -->
 
-        >>>>>>> 1235fda0ab9127b9e587937e0b6f7e3e23145d6d
-
-        <!-- Title of the page -->
-        <title> Profile </title>
+    <!-- Title of the page -->
+    <title> Profile </title>
 </head>
 <style>
     .profile-container {
@@ -199,56 +196,55 @@ $licenseQueryResult = $conn->query($licenseQuery);
                         </div>
                     </div>
 
-                    <<<<<<< HEAD=======>>>>>>> 1235fda0ab9127b9e587937e0b6f7e3e23145d6d
-                        <div class="card col-md-7 m-1 shadow">
-                            <div class="card-body">
-                                <h2>History</h2>
-                                <div class="d-flex justify-content-center">
-                                    <div class="row">
-                                        <?php
-                                        if ($attemptedModulesResult->num_rows > 0) {
-                                            while ($row = $attemptedModulesResult->fetch_assoc()) {
-                                                // Fetching data from the row
-                                                $module_id = $row['module_id'];
-                                                $module_name = $row['module_name'];
-                                                $module_image = $row['module_image'];
-                                                $module_score = $row['score'];
+                    <div class="card col-md-7 m-1 shadow">
+                        <div class="card-body">
+                            <h2>History</h2>
+                            <div class="d-flex justify-content-center">
+                                <div class="row">
+                                    <?php
+                                    if ($attemptedModulesResult->num_rows > 0) {
+                                        while ($row = $attemptedModulesResult->fetch_assoc()) {
+                                            // Fetching data from the row
+                                            $module_id = $row['module_id'];
+                                            $module_name = $row['module_name'];
+                                            $module_image = $row['module_image'];
+                                            $module_score = $row['score'];
 
-                                                // Check if the module has already been added with a higher score
-                                                if (isset($highestScores[$module_id]) && $highestScores[$module_id] >= $module_score) {
-                                                    continue; // Skip this module
-                                                }
+                                            // Check if the module has already been added with a higher score
+                                            if (isset($highestScores[$module_id]) && $highestScores[$module_id] >= $module_score) {
+                                                continue; // Skip this module
+                                            }
 
-                                                // Store the highest score for the module
-                                                $highestScores[$module_id] = $module_score;
-                                        ?>
-                                                <!-- Displaying each module in a card -->
-                                                <div class="card mb-3">
-                                                    <div class="row g-0">
-                                                        <div class="col-md-4 p-2 align-self-center text-center">
-                                                            <img src="<?php echo $module_image; ?>" alt="<?php echo $module_name; ?>" class="img-fluid" style="max-height: 100px; object-fit: contain;">
-                                                        </div>
-                                                        <div class="col-md-8">
-                                                            <div class="card-body">
-                                                                <h5 class="card-title"><?php echo $module_name; ?></h5>
-                                                                <p class="card-text">Highest Score: <?php echo $module_score; ?>%</p>
-                                                                <div class="progress" style="height: 5px">
-                                                                    <div class="progress-bar signature-bg-color" role="progressbar" style="width: <?php echo $highestScores[$module_id]; ?>%;" aria-valuenow="<?php echo $highestScores[$module_id]; ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                                                                </div>
+                                            // Store the highest score for the module
+                                            $highestScores[$module_id] = $module_score;
+                                    ?>
+                                            <!-- Displaying each module in a card -->
+                                            <div class="card mb-3">
+                                                <div class="row g-0">
+                                                    <div class="col-md-4 p-2 align-self-center text-center">
+                                                        <img src="<?php echo $module_image; ?>" alt="<?php echo $module_name; ?>" class="img-fluid" style="max-height: 100px; object-fit: contain;">
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title"><?php echo $module_name; ?></h5>
+                                                            <p class="card-text">Highest Score: <?php echo $module_score; ?>%</p>
+                                                            <div class="progress" style="height: 5px">
+                                                                <div class="progress-bar signature-bg-color" role="progressbar" style="width: <?php echo $highestScores[$module_id]; ?>%;" aria-valuenow="<?php echo $highestScores[$module_id]; ?>" aria-valuemin="0" aria-valuemax="100"></div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                        <?php
-                                            }
-                                        } else {
-                                            echo "<p>No attempted modules found.</p>";
+                                            </div>
+                                    <?php
                                         }
-                                        ?>
-                                    </div>
+                                    } else {
+                                        echo "<p>No attempted modules found.</p>";
+                                    }
+                                    ?>
                                 </div>
                             </div>
                         </div>
+                    </div>
                 </div>
             </div>
         </div>
