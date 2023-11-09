@@ -86,6 +86,7 @@ $select_result = $conn->query($select_query);
                                 <thead>
                                     <tr class="text-center">
                                         <th> Question </th>
+                                        <th> Written Answer</th>
                                         <th> Status </th>
                                     </tr>
                                 </thead>
@@ -95,6 +96,9 @@ $select_result = $conn->query($select_query);
                                             <tr class="align-middle" data-bs-toggle='modal' data-bs-target='#writtenAnswerModal'>
                                                 <td class="pt-4 pb-4">
                                                     <h3><?php echo $row["full_name"] . " - " . $row["employee_id"] . "</h3>" . $row["question"] . "<br>" . $row["datetime"] ?>
+                                                </td>
+                                                <td class="text-center">
+                                                    <?php echo $row["written_answer"] ?>
                                                 </td>
                                                 <?php if ($row['is_marked'] == 0) {
                                                     echo "<td class='text-center'> <span class='badge rounded-pill text-bg-danger' style='font-size:16px'>Not Marked</span></td>";
@@ -167,10 +171,12 @@ $select_result = $conn->query($select_query);
                 let button = event.relatedTarget;
                 let row = button.closest('tr');
                 let question = row.cells[0].textContent;
+                let answer = row.cells[1].textContent;
 
                 let writtenAnswerDetails = document.getElementById('writtenAnswerDetails');
                 writtenAnswerDetails.innerHTML = `
-                <p class='text-center '><strong>Question:</strong> ${question.match(/(.*?) -/)[1]}</p>
+                <p><strong>Question:</strong> ${question.match(/(.*?) -/)[1]}</p>
+                <p><strong>Written Answer:</strong> ${answer}</p>
             `;
             });
         });
