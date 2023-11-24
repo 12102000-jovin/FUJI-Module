@@ -21,12 +21,18 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     exit();
 }
 
-// Query to select questions
-$select_query = "SELECT * FROM written_questions WHERE module_id = 1";
-$select_result = $conn->query($select_query);
+if (isset($_SESSION['employeeId'])) {
+    $employeeId = $_SESSION['employeeId'];
+    var_dump($employeeId);
+} else {
+    echo "Session variable 'employee_id' is not set.";
+}
 
-$_SESSION['employee_id'] = 222;
-$employee_id = $_SESSION['employee_id'];
+$moduleId = $_GET["moduleId"];
+
+// Query to select questions
+$select_query = "SELECT * FROM written_questions WHERE module_id = $moduleId";
+$select_result = $conn->query($select_query);
 
 if (isset($_POST['submitAnswers'])) {
     $select_result = $conn->query($select_query);
@@ -35,11 +41,11 @@ if (isset($_POST['submitAnswers'])) {
     while ($row = $select_result->fetch_assoc()) {
         $answer = $_POST['answer' . $questionNumber];
 
-        if (isset($row['written_question_id']) && isset($_SESSION['employee_id'])) {
-            $insert_query = "INSERT INTO written_answers (written_answer, written_question_id, employee_id, module_id, datetime) VALUES (?, ?, ?, 1, NOW())";
+        if (isset($row['written_question_id']) && isset($employeeId)) {
+            $insert_query = "INSERT INTO written_answers (written_answer, written_question_id, employee_id, module_id, datetime) VALUES (?, ?, ?, ?, NOW())";
             $stmt = $conn->prepare($insert_query);
             if ($stmt) {
-                $stmt->bind_param("sii", $answer, $row['written_question_id'], $_SESSION['employee_id']);
+                $stmt->bind_param("siii", $answer, $row['written_question_id'], $employeeId, $moduleId);
                 if ($stmt->execute()) {
                     echo "Successful";
                 } else {
@@ -51,11 +57,11 @@ if (isset($_POST['submitAnswers'])) {
             }
         } else {
             // Handle any error or log that 'written_question_id' or 'employee_id' is missing
+            echo "Missing";
         }
         $questionNumber++; // Increment the question counter
     }
 
-    header("Location: written-question-list.php");
     exit();
 }
 ?>

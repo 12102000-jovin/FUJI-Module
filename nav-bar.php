@@ -89,6 +89,15 @@
                     </li>
                 <?php endif; ?>
 
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle signature-color" href="#" id="written-question" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Written
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="written-question">
+                        <li><a class="dropdown-item" href="written-question.php">Written Question</a></li>
+                        <li><a class="dropdown-item" href="written-question-list.php">Written Question List</a></li>
+                    </ul>
+                </li>
                 <!-- Logout Button -->
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>

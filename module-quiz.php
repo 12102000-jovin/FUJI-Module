@@ -252,6 +252,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           echo '<button class="btn btn-secondary mr-3" type="submit" name="try_again" onclick="disableConfirmationAlert()">Try Again</button>';
           echo '<span style="margin-right: 10px;"></span>';
           echo '<a href="index.php" class="btn btn-dark" onclick="disableConfirmationAlert()">Home</a>';
+          echo '<span style="margin-right: 10px;"></span>';
+          echo '<a href="written-question.php?moduleId=' . $moduleId . '" class="btn btn-info" onclick="disableConfirmationAlert()">Continue to Written Questions</a>';
 
           // Store the quiz results in the database
           $employee_id = $_SESSION['employeeId'] ?? 'N/A';
@@ -274,7 +276,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
             // Check if the query was successful
             if ($stmt->affected_rows <= 0) {
-              echo "<p>Error updatinregarding lig result_id in user_answers table</p>";
+              echo "<p>Error updating result_id in user_answers table</p>";
             }
           } else {
             echo "<p>Error storing quiz results: " . $conn->error . "</p>";

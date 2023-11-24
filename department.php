@@ -388,7 +388,7 @@ $conn->close();
         const tooltips = document.querySelectorAll('.tooltips');
         tooltips.forEach(t => {
             new bootstrap.Tooltip(t)
-        })
+        });
     </script>
 
     <script>

@@ -48,4 +48,21 @@ if (isset($_SESSION['username']) && isset($_SESSION['logged_in'])) {
         header("Location: login.php?error=" . urlencode($error_message));
         exit();
     }
+
+    // putting employee_id into SESSION
+
+    // $select_employee_id = "SELECT employee_id FROM users WHERE username = ?";
+    // $stmt_select_employee_id = $conn->prepare($select_employee_id);
+    // $stmt_select_employee_id->bind_param("s", $username);
+    // $stmt_select_employee_id->execute();
+    // $result_employee_id = $stmt_select_employee_id->get_result();
+
+    // if ($result_employee_id->num_rows > 0) {
+    //     while ($row = $result_employee_id->fetch_assoc()) {
+    //         $_SESSION["grader_id"] = $row['employee_id'];
+    //     }
+    // }
+
+    // // Don't forget to close the statement
+    // $stmt_select_employee_id->close();
 }
