@@ -253,7 +253,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           echo '<span style="margin-right: 10px;"></span>';
           echo '<a href="index.php" class="btn btn-dark" onclick="disableConfirmationAlert()">Home</a>';
           echo '<span style="margin-right: 10px;"></span>';
-          echo '<a href="written-question.php?moduleId=' . $moduleId . '" class="btn btn-info" onclick="disableConfirmationAlert()">Continue to Written Questions</a>';
+          echo '<a href="written-question.php?moduleId=' . $moduleId . '" class="btn btn-info" onclick="disableConfirmationAlert()">Continue to Essay</a>';
 
           // Store the quiz results in the database
           $employee_id = $_SESSION['employeeId'] ?? 'N/A';
@@ -301,25 +301,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     </div>
   </footer>
 
-  <!-- Confirmation Modal -->
-  <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="confirmationModalLabel">Confirm Action</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to go to the previous page? Any unsaved data may be lost.
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a href="#" id="confirmBackButton" class="btn btn-primary">Yes, Go Back</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Logout Modal -->
   <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -344,41 +325,17 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    var shouldShowConfirmation = true;
-
-    // Function to show the Bootstrap confirmation modal
-    function showConfirmationModal() {
-      $('#confirmationModal').modal('show');
-    }
-
-    // Function to disable the confirmation modal when navigating to the next question
-    function disableConfirmationAlert() {
-      shouldShowConfirmation = false;
-    }
-
-    // Function to enable the confirmation modal when attempting to leave the page
-    window.onbeforeunload = function(e) {
-      if (shouldShowConfirmation) {
-        return "Are you sure you want to leave? Your progress may be lost.";
-      }
-    };
-
-    // Add an event listener to the "Next Question" button
-    document.querySelector('#nextButton').addEventListener('click', function() {
-      disableConfirmationAlert();
-    });
-
-    // Add an event listener to the link for the home button
-    document.querySelector('a[href="index.php"]').addEventListener('click', function() {
-      disableConfirmationAlert();
-    });
-
-    // Add an event listener to the "Try Again" button
-    document.querySelector('button[name="try_again"]').addEventListener('click', function() {
-      disableConfirmationAlert();
+  <script type="text/javascript">
+    window.addEventListener('load', function() {
+      // Disable the back button
+      history.pushState(null, null, location.href);
+      window.onpopstate = function() {
+        history.go(1);
+        alert("Access to the previous page in the quiz is restricted.");
+      };
     });
   </script>
+
 
   <script>
     // Get references to the radio buttons and their parent input groups
@@ -448,6 +405,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
       nextButton.disabled = !checked;
     }
   </script>
+
+
 
 </body>
 

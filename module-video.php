@@ -93,9 +93,19 @@ $conn->close();
     <div class="container mb-5">
         <div class="d-flex justify-content-center" style="margin-top: 3vh">
             <a class="btn btn-secondary m-1" href="modules.php" role="button">Back</a>
-            <button type="button" class="btn m-1 signature-btn shadow" onclick="window.location.href='module-quiz.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">Start Module</button>
+            <div class="dropdown">
+                <button class="btn signature-btn dropdown-toggle m-1 shadow" type="button" id="startDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Start
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="startDropdown">
+                    <li><a class="dropdown-item" onclick="window.location.href='module-quiz.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">Start Module (MCQ)</a></li>
+                    <li><a class="dropdown-item" onclick="window.location.href='written-question.php?moduleId=<?php echo $moduleId; ?>';" style="text-decoration: none;">Start Module (Essay)</a></li>
+                </ul>
+            </div>
         </div>
     </div>
+
+    <div class="mt-5"></div>
 
     <!-- ==================================================================================  -->
 

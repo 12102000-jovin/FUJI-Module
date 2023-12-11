@@ -1,4 +1,6 @@
 <?php
+
+
 // Start the session, to load all the Session Variables
 session_start();
 // Connect to the database
@@ -67,19 +69,22 @@ $result->free();
 
 // Retrieve modules from the 'modules' table that is not archived
 $modulesQuery = "
-      SELECT 
+    SELECT 
         m.module_id, 
         m.module_name, 
         m.module_description, 
         m.module_image, 
-        IFNULL(MAX(r.score), 0) AS score
+        IFNULL(MAX(r.score), 0) AS score,
+        IFNULL(MAX(wr.is_correct), 0) AS is_correct
     FROM modules m
     LEFT JOIN results r ON m.module_id = r.module_id AND r.employee_id = '$employee_id'
     LEFT JOIN module_allocation ma ON m.module_id = ma.module_id AND ma.employee_id = '$employee_id'
+    LEFT JOIN written_results wr ON m.module_id = wr.module_id AND wr.employee_id = '$employee_id'
     WHERE m.is_archived = '0' AND ma.module_id IS NOT NULL
     GROUP BY m.module_id, m.module_name, m.module_description, m.module_image
     ORDER BY m.module_id;
-  ";
+";
+
 // Execute the SQL query and store the result set in $moduleResult
 $modulesResult = $conn->query($modulesQuery);
 
@@ -88,10 +93,17 @@ $modulesResult = $conn->query($modulesQuery);
 // Retrieve modules from the 'modules' table that have been attempted by the user along with the highest score
 // Query to retrieve attempted modules and their scores for a specific employee
 $attemptedModulesQuery = "
-    SELECT ma.module_id, m.module_name, m.module_description, m.module_image, r.score
+    SELECT 
+        ma.module_id, 
+        m.module_name, 
+        m.module_description, 
+        m.module_image, 
+        r.score,
+        wr.is_correct
     FROM module_allocation ma
     JOIN modules m ON ma.module_id = m.module_id
-    JOIN results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
+    LEFT JOIN results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
+    LEFT JOIN written_results wr ON ma.module_id = wr.module_id AND wr.employee_id = '$employee_id'
     JOIN (
       SELECT module_id, MAX(score) AS max_score
       FROM results
@@ -101,6 +113,7 @@ $attemptedModulesQuery = "
     WHERE m.is_archived = '0' AND r.employee_id = '$employee_id'
     ORDER BY ma.module_id
   ";
+
 
 $attemptedModulesResult = $conn->query($attemptedModulesQuery);
 
@@ -211,7 +224,6 @@ $conn->close();
     <div class="container">
       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="flex-wrap: nowrap; overflow-x: auto;">
         <?php
-        // Looping through the unattempted modules and fetching each row's data.
         while ($unattemptedModuleRow = $unattemptedModulesResult->fetch_assoc()) {
           $moduleId = $unattemptedModuleRow['module_id'];
           $moduleName = $unattemptedModuleRow['module_name'];
@@ -222,13 +234,12 @@ $conn->close();
           // Store the highest score for the module
           $highestScores[$moduleId] = $moduleScore;
 
-          // Limit the description to a maximum of 100 charac
+          // Limit the description to a maximum of 100 characters
           $maxCharacters = 100;
           $charactersArray = str_split($moduleDescription);
           $limitedDescription = implode('', array_slice($charactersArray, 0, $maxCharacters));
         ?>
           <div class="col">
-            <!-- Redirects to the "module-video.php" page with the corresponding module_id as a parameter. -->
             <a onclick="window.location.href='module-video.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">
               <div class="card h-100 shadow" style="cursor: pointer">
                 <img src="<?php echo $moduleImage; ?>" class="card-img-top p-4" alt="Icon failed to load" style="max-height: 300px; object-fit: contain;">
@@ -245,12 +256,12 @@ $conn->close();
                     ?>
                   </p>
                   <?php
-                  // Check if the module is uncompleted or has less than 100% score
-                  if ($moduleScore < 100) {
+                  // Check if the module is uncompleted (score < 100) or is_correct is 0
+                  if ($moduleScore < 100 || $unattemptedModuleRow['is_correct'] == 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                    <span class="visually-hidden">New alerts</span>
-                    <span style="font-size: 8px">To-Do</span>
-                </span>';
+                                <span class="visually-hidden">New alerts</span>
+                                <span style="font-size: 8px">To-Do</span>
+                              </span>';
                   }
                   ?>
                 </div>
@@ -260,6 +271,7 @@ $conn->close();
         <?php
         }
         ?>
+
       </div>
     </div>
   <?php
@@ -303,6 +315,7 @@ $conn->close();
           $moduleDescription = $attemptedModulesRow['module_description'];
           $moduleImage = $attemptedModulesRow['module_image'];
           $moduleScore = $attemptedModulesRow['score'];
+          $isCorrect = $attemptedModulesRow['is_correct'];
 
           // Check if the module has already been added with a higher score
           if (isset($highestScores[$moduleId]) && $highestScores[$moduleId] >= $moduleScore) {
@@ -338,12 +351,22 @@ $conn->close();
                 </div>
                 <?php
                 // Check if the module is uncompleted or has less than 100% score
-                if ($moduleScore < 100) {
+                if ($moduleScore < 100 && $isCorrect == 0) {
                   echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
                   <span class="visually-hidden">New alerts</span>
                   <span style="font-size: 8px">To-Do</span>
               </span>';
-                } else if ($moduleScore = 100) {
+                } else if ($moduleScore < 100) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                  <span class="visually-hidden">New alerts</span>
+                  <span style="font-size: 8px">MCQ!</span>
+              </span>';
+                } else if ($isCorrect == 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                <span class="visually-hidden">New alerts</span>
+                <span style="font-size: 8px">Essay!</span>
+            </span>';
+                } else if ($moduleScore == 100 && $isCorrect == 1) {
                   echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
                   <span class="visually-hidden">New alerts</span>
                   <span style="font-size: 8px">Done</span>
@@ -402,6 +425,7 @@ $conn->close();
             $moduleDescription = $moduleRow['module_description'];
             $moduleImage = $moduleRow['module_image'];
             $moduleScore = $moduleRow['score'];
+            $isCorrect = $moduleRow['is_correct'];
 
             // Limit the description to a maximum of 100 character
             $maxCharacters = 100;
@@ -427,16 +451,26 @@ $conn->close();
                   </div>
                   <?php
                   // Check if the module is uncompleted or has less than 100% score
-                  if ($moduleScore < 100) {
+                  if ($moduleScore < 100 && $isCorrect == 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
                     <span class="visually-hidden">New alerts</span>
                     <span style="font-size: 8px">To-Do</span>
                 </span>';
-                  } else if ($moduleScore = 100) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
+                  } else if ($moduleScore < 100) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
                     <span class="visually-hidden">New alerts</span>
-                    <span style="font-size: 8px">Done</span>
+                    <span style="font-size: 8px">MCQ!</span>
                 </span>';
+                  } else if ($isCorrect == 0) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                  <span class="visually-hidden">New alerts</span>
+                  <span style="font-size: 8px">Essay!</span>
+              </span>';
+                  } else if ($moduleScore == 100 && $isCorrect == 1) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
+                            <span class="visually-hidden">New alerts</span>
+                            <span style="font-size: 8px">Done</span>
+                        </span>';
                   }
                   ?>
                 </div>

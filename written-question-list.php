@@ -21,51 +21,150 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     exit();
 }
 
-$select_query = "SELECT wa.*, wq.question, u.full_name, wr.feedback 
-                FROM written_answers wa 
+/* ================================================================================== */
+
+$module_id = isset($_GET['module_id']) ? $_GET['module_id'] : '';
+
+// Pagination settings
+$availableRecordsPerPage = array(10, 15, 20);
+$recordsPerPage = isset($_GET['recordsPerPage']) && in_array($_GET['recordsPerPage'], $availableRecordsPerPage) ? intval($_GET['recordsPerPage']) : 10;
+$pageNumber = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
+$offset = ($pageNumber - 1) * $recordsPerPage;
+
+$search_query = isset($_GET['select_query']) ? $_GET['select_query'] : '';
+$select_query = "SELECT wa.*, wq.question, u.full_name, wr.feedback, wr.written_result_id, wr.is_correct, u.full_name
+                FROM written_answers wa
+                INNER JOIN users u ON wa.employee_id = u.employee_id
                 INNER JOIN written_questions wq ON wa.written_question_id = wq.written_question_id
-                INNER JOIN users u ON wa.employee_id = u.employee_id 
                 LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
-                ORDER BY wa.written_answer_id ASC";
+                WHERE wq.module_id = $module_id AND (wa.employee_id LIKE '%$search_query%'
+                OR wa.written_answer LIKE '%$search_query%'
+                OR LOWER(TRIM(wq.question)) LIKE LOWER('%$search_query%')
+                OR wr.feedback LIKE '%$search_query%'
+                OR wa.datetime LIKE '%$search_query%'
+                OR u.full_name LIKE '%$search_query%'
+                OR (
+                    (LOWER('$search_query') = 'marked' AND wa.is_marked = 1)
+                    OR (LOWER('$search_query') = 'not marked' AND wa.is_marked = 0)
+                    OR (LOWER('$search_query') = 'unmarked' AND wa.is_marked = 0)
+                    OR (LOWER('$search_query') = 'notmarked' AND wa.is_marked = 0)
+                ))
+                ORDER BY wa.datetime DESC 
+                LIMIT $offset, $recordsPerPage";
+
 
 $select_result = $conn->query($select_query);
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id'])) {
+/* ================================================================================== */
+
+// Count total number of records for pagination
+$countQuery = "
+    SELECT COUNT(*) AS total 
+    FROM written_answers wa
+    INNER JOIN users u ON wa.employee_id = u.employee_id
+    INNER JOIN written_questions wq ON wa.written_question_id = wq.written_question_id
+    LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
+    WHERE wq.module_id = $module_id AND (wa.employee_id LIKE '%$search_query%'
+        OR wa.written_answer LIKE '%$search_query%'
+        OR LOWER(TRIM(wq.question)) LIKE LOWER('%$search_query%')
+        OR wr.feedback LIKE '%$search_query%'
+        OR wa.datetime LIKE '%$search_query%'
+        OR u.full_name LIKE '%$search_query%'
+        OR (
+            (LOWER('$search_query') = 'marked' AND wa.is_marked = 1)
+            OR (LOWER('$search_query') = 'not marked' AND wa.is_marked = 0)
+            OR (LOWER('$search_query') = 'unmarked' AND wa.is_marked = 0)
+            OR (LOWER('$search_query') = 'notmarked' AND wa.is_marked = 0)
+        ))
+";
+
+$countResult = $conn->query($countQuery);
+$totalRecords = $countResult->fetch_assoc()['total'];
+$totalPages = ceil($totalRecords / $recordsPerPage);
+
+/* ================================================================================== */
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']) && isset($_POST['markQuestion'])) {
     $feedback = $_POST['feedback'];
     $employeeId = $_POST['employee-id'];
-    $grader_id = $_SESSION["employee_id"];
+    $grader_id = $_SESSION["employeeId"];
     $is_correct = isset($_POST['markQuestionToggle']) ? 1 : 0;
     $writtenAnswerId = $_POST['written-answer-id'];
 
-    // var_dump($feedback);
-    // var_dump($writtenAnswerId);
-    // var_dump($employeeId);
-    // var_dump($grader_id);
-    // var_dump($is_correct);
-
-    $insert_query = "INSERT INTO written_results (feedback, employee_id, grader_id, graded_at, is_correct, written_answer_id) 
-                    VALUES (?, ?, ?, NOW(), ?, ?)";
+    $insert_query = "INSERT INTO written_results (feedback, employee_id, grader_id, graded_at, is_correct, written_answer_id, module_id) 
+                    VALUES (?, ?, ?, NOW(), ?, ?, ?)";
     $stmt = $conn->prepare($insert_query);
-    $stmt->bind_param("siiii", $feedback, $employeeId, $grader_id, $is_correct, $writtenAnswerId);
+    $stmt->bind_param("siiiii", $feedback, $employeeId, $grader_id, $is_correct, $writtenAnswerId, $module_id);
 
     if ($stmt->execute()) {
-
         $update_mark_status = "UPDATE written_answers SET is_marked = 1 WHERE written_answer_id = ? ";
         $update_mark_stmt = $conn->prepare($update_mark_status);
         $update_mark_stmt->bind_param("i", $writtenAnswerId);
 
         if ($update_mark_stmt->execute()) {
             // echo "status updated!";
+        } else {
+            echo "Error updating status after insertion: " . $update_mark_stmt->error;
         }
 
         // Redirect to the same page after inserting
         header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     } else {
-        echo "Error inserting data: " . $stmt->error;
+        echo "Error inserting data: " . $$update_mark_stmt->error;
     }
 }
 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) && isset($_POST['reMarkQuestion'])) {
+    $feedback = $_POST['feedback'];
+    $employeeId = $_POST['employee-id'];
+    $grader_id = $_SESSION["employeeId"];
+    $is_correct = isset($_POST['markQuestionToggle']) ? 1 : 0;
+    $writtenResultId = $_POST['written-result-id'];
+
+    var_dump($feedback);
+    var_dump($writtenResultId);
+    var_dump($employeeId);
+    var_dump($grader_id);
+    var_dump($is_correct);
+
+    $update_query = "UPDATE written_results SET grader_id = ?, feedback = ?, graded_at = NOW(), is_correct = ? WHERE written_result_id = ?";
+    $update_query_stmt = $conn->prepare($update_query);
+    $update_query_stmt->bind_param("isii", $grader_id, $feedback,  $is_correct, $writtenResultId);
+
+    if ($update_query_stmt->execute()) {
+        // echo "feedback updated!";
+        header("Location: " . $_SERVER['REQUEST_URI']);
+    } else {
+        echo "Error updating data: " . $update_query_stmt->error;
+    }
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) && isset($_POST['deleteQuestion'])) {
+    $writtenResultId = $_POST['written-result-id'];
+    $writtenAnswerId = $_POST['written-answer-id'];
+
+    $delete_query = "DELETE FROM written_results WHERE written_result_id = ?";
+    $delete_query_stmt = $conn->prepare($delete_query);
+    $delete_query_stmt->bind_param("i", $writtenResultId);
+
+    if ($delete_query_stmt->execute()) {
+        echo "Successfully Deleted!";
+
+        $unmark_question_query = "UPDATE written_answers SET is_marked = 0 WHERE written_answer_id = ?";
+        $unmark_question_stmt = $conn->prepare($unmark_question_query);
+        $unmark_question_stmt->bind_param("i", $writtenAnswerId);
+
+        if ($unmark_question_stmt->execute()) {
+            echo "Question successfully unmarked";
+            header("Location: " . $_SERVER['REQUEST_URI']);
+        } else {
+            echo "Error unmarking the question" . $unmark_question_stmt->error;
+        }
+    } else {
+        echo "Error deleting data: " . $delete_query_stmt->error;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -77,62 +176,94 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Written Quiz List</title>
+    <title>Essay Quiz List</title>
+    <style>
+        /* Add custom CSS styles here */
+        @media (max-width: 576px) {
+
+            /* Adjust table styles for small screens */
+            table {
+                font-size: 10px;
+            }
+
+            table h3 {
+                font-size: 14px;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .badge {
+                font-size: 10px !important;
+            }
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #043f9d;
+            border: 1px solid #043f9d;
+        }
+
+        .table thead th {
+            background-color: #043f9d;
+            color: white;
+            border: 1px solid #043f9d !important;
+        }
+    </style>
 </head>
 
-<style>
-    /* Add custom CSS styles here */
-    @media (max-width: 576px) {
-
-        /* Adjust table styles for small screens */
-        table {
-            font-size: 10px;
-        }
-
-        table h3 {
-            font-size: 14px;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .badge {
-            font-size: 10px !important;
-        }
-    }
-
-    .table thead th {
-        background-color: #043f9d;
-        color: white;
-        border: 1px solid #043f9d !important;
-    }
-</style>
+<script>
+    // Capture scroll position before page refresh or redirection
+    window.addEventListener('beforeunload', function() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+</script>
 
 <body class="d-flex flex-column min-vh-100">
     <?php require_once("nav-bar.php"); ?>
-
-    <div class="container">
+    <div class="container d-flex justify-content-center">
         <div class="row justify-content-center">
             <div class="col-md-12">
                 <div class="card mt-5 mb-5 p-3">
+
                     <div class="card-body">
-                        <h1 class="text-center">Written Question Marking List</h1>
+                        <h1 class="text-center">Essay Question Marking List</h1>
+                        <form method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                            <input type="hidden" name="module_id" value="<?php echo htmlspecialchars($module_id); ?>">
+                            <div class="d-flex justify-content-between aling-items-center">
+                                <div class="d-flex align-items-center col-md-8 mt-5">
+                                    <input class="form-control mr-sm-2" type="search" name="select_query" placeholder="Search" aria-label="Search" style="height: 38px;">
+                                    <button class="btn btn-dark mx-2 my-2 my-sm-0" type="submit">Search</button>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-center mt-5 justify-content-end">
+                                    <label class="my-auto me-2">Show</label>
+                                    <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2" style="width: 70px">
+                                        <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                                        <option value="15" <?php echo $recordsPerPage == 15 ? 'selected' : ''; ?>>15</option>
+                                        <option value="20" <?php echo $recordsPerPage == 20 ? 'selected' : ''; ?>>20</option>
+                                    </select>
+                                    <label>entries</label>
+                                </div>
+                            </div>
+                        </form>
                         <form method="POST">
-                            <table class="table table-striped table-hover table-bordered mt-5">
+                            <table class="table table-striped table-hover table-bordered mt-2">
                                 <thead>
                                     <tr class="text-center align-middle">
                                         <th> Question </th>
                                         <th> Written Answer</th>
                                         <th> Status </th>
+                                        <th> Feedback </th>
+                                        <th> Result </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php if ($select_result->num_rows > 0) {
                                         while ($row = $select_result->fetch_assoc()) { ?>
-                                            <tr class="align-middle" data-bs-toggle='modal' data-bs-target='#writtenAnswerModal' data-written-answer="<?php echo htmlspecialchars($row['written_answer']); ?>" data-question="<?php echo $row['question'] ?>" data-is-marked="<?php echo $row['is_marked'] ?>" data-written-id="<?php echo $row["written_answer_id"] ?>" data-employee-id="<?php echo $row["employee_id"] ?>" data-feedback="<?php echo ($row['feedback'] !== null) ? htmlspecialchars($row['feedback']) : ''; ?>">
+                                            <tr class="align-middle" data-bs-toggle='modal' data-bs-target='#writtenAnswerModal' data-written-answer="<?php echo htmlspecialchars($row['written_answer']); ?>" data-question="<?php echo $row['question'] ?>" data-is-marked="<?php echo $row['is_marked'] ?>" data-written-id="<?php echo $row["written_answer_id"] ?>" data-employee-id="<?php echo $row["employee_id"] ?>" data-feedback="<?php echo ($row['feedback'] !== null) ? htmlspecialchars($row['feedback']) : ''; ?>" data-written-result-id="<?php echo $row["written_result_id"] ?>">
                                                 <td class="pt-4 pb-4">
                                                     <h3><?php echo $row["full_name"] . " - " . $row["employee_id"] . "</h3> " . $row["question"] . "<br>" . $row["datetime"] ?>
                                                 </td>
@@ -157,11 +288,74 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
                                                     echo "<td class='text-center'> <span class='badge rounded-pill text-bg-success' style='font-size:16px'>Marked</span> </td>";
                                                 }
                                                 ?>
+                                                <td class="text-center"> <?php echo ($row['feedback'] !== null) ? htmlspecialchars($row['feedback']) : 'No feedback available'; ?> </td>
+                                                <td class="text-center">
+                                                    <?php
+                                                    if ($row['is_correct'] === "0") {
+                                                        echo "<span class='badge rounded-pill text-bg-danger' style='font-size:16px'>False</span>";
+                                                    } else if ($row['is_correct'] === "1") {
+                                                        echo "<span class='badge rounded-pill text-bg-success' style='font-size:16px'>True</span>";
+                                                    } else {
+                                                        echo "<span class='badge rounded-pill text-bg-secondary' style='font-size:16px'> N/A </span>";
+                                                    }
+                                                    ?>
+                                                </td>
                                             </tr>
                                     <?php }
+                                    } else {
+                                        // Display a message when there are no rows in the table
+                                        echo '<tr><td col-md-6 colspan="5" class="text-center">No Answers</td></tr>';
                                     } ?>
+
                                 </tbody>
                             </table>
+                            <?php
+
+                            echo '<div class="d-flex justify-content-center">';
+                            // Pagination controls
+                            echo '<ul class="pagination">';
+
+                            // Calculate the start and end page numbers for the limited pagination
+                            $startPage = max(1, $pageNumber - 1);
+                            $endPage = min($totalPages, $pageNumber + 1);
+
+                            // Previous page link
+                            if ($pageNumber > 1) {
+                                echo '<li class="page-item">';
+                                echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . ($pageNumber - 1) . '&module_id=' . $module_id . '"><i class="fas fa-angle-double-left"></i></a>';
+                                echo '</li>';
+                            } else {
+                                echo '<li class="page-item disabled">';
+                                echo '<a class="page-link" href="#" tabindex="-1"><i class="fas fa-angle-double-left"></i></a>';
+                                echo '</li>';
+                            }
+
+                            // Page numbers
+                            for ($i = $startPage; $i <= $endPage; $i++) {
+                                echo '<li class="page-item';
+                                if ($i === $pageNumber) {
+                                    echo ' active';
+                                }
+                                echo '">';
+                                echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . $i . '&module_id=' . $module_id . '">' . $i . '</a>';
+                                echo '</li>';
+                            }
+
+                            // Next page link
+                            if ($pageNumber < $totalPages) {
+                                echo '<li class="page-item">';
+                                echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . ($pageNumber + 1) . '&module_id=' . $module_id . '"><i class="fas fa-angle-double-right"></i></a>';
+                                echo '</li>';
+                            } else {
+                                echo '<li class="page-item disabled">';
+                                echo '<a class="page-link" href="#" tabindex="-1"><i class="fas fa-angle-double-right"></i></a>';
+                                echo '</li>';
+                            }
+
+                            echo '</ul>';
+                            echo '</div>';
+                            ?>
+
                         </form>
                     </div>
                 </div>
@@ -170,7 +364,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
     </div>
 
     <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
+    <footer class=" bg-light text-center py-4 mt-auto shadow-lg">
         <div class="container">
             <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
         </div>
@@ -208,20 +402,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
                         <div id="writtenAnswerDetails"></div>
 
                         <label for="markQuestion" class="form-label"><strong>Feedback</strong></label>
-                        <textarea type="text" class="form-control" name="feedback" value=""></textarea>
+                        <textarea type="text" class="form-control" name="feedback" value="" required></textarea>
 
                         <label for="markQuestionToggle" class="form-label mt-3"><strong>Mark Question</strong></label>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input form-check-lg mt-2" type="checkbox" id="markQuestionToggle" name="markQuestionToggle">
-                            <label class="form-check-label" id="markQuestionLabel" for="markQuestionToggle">False</label>
+                        <div class="form-check form-switch d-flex align-items-center">
+                            <input class="form-check-input form-check-lg mb-1 p-2" type="checkbox" id="markQuestionToggle" name="markQuestionToggle">
+                            <label class="form-check-label m-2" id="markQuestionLabel" for="markQuestionToggle">False</label>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn signature-btn markQuestionButton" id="markQuestionButton">Mark Question</button>
-                        <button type="button" class="btn signature-btn" id="reMarkQuestionButton">Re-Mark Question</button>
+                        <button type="submit" class="btn signature-btn markQuestionButton" id="markQuestionButton" name="markQuestion">Mark Question</button>
+                        <button type="submit" class="btn signature-btn bg-danger" id="deleteQuestionButton" name="deleteQuestion">Delete Mark</button>
+                        <button type="submit" class="btn signature-btn" id="reMarkQuestionButton" name="reMarkQuestion">Re-Mark Question</button>
                         <input type="hidden" name="written-answer-id">
                         <input type="hidden" name="employee-id">
+                        <input type="hidden" name="written-result-id">
                     </div>
                 </form>
             </div>
@@ -238,6 +434,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
             let writtenAnswerIdField = document.querySelector('input[name="written-answer-id"]');
             let employeeId = document.querySelector('input[name="employee-id"]');
             let feedbackInput = document.querySelector('textarea[name="feedback"]');
+            let writtenResultIdField = document.querySelector('input[name="written-result-id"]');
 
             writtenAnswerModal.addEventListener('show.bs.modal', function(event) {
                 let button = event.relatedTarget;
@@ -248,29 +445,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
                 let writtenAnswerId = row.getAttribute('data-written-id');
                 let employee_id = row.getAttribute('data-employee-id');
                 let feedback = row.getAttribute('data-feedback'); // Added this line
+                let writtenResultId = row.getAttribute('data-written-result-id');
 
                 // Set the value of the hidden input field and feedback input
                 writtenAnswerIdField.value = writtenAnswerId;
                 employeeId.value = employee_id;
                 feedbackInput.value = feedback !== null ? feedback : ''; // Updated this line
+                writtenResultIdField.value = writtenResultId;
 
                 let writtenAnswerDetails = document.getElementById('writtenAnswerDetails');
                 writtenAnswerDetails.innerHTML = `
             <p><strong>Question:</strong> ${question}</p>
-            <p><strong>Answer:</strong> ${answer}</p>
+            <p><strong>User's Answer:</strong> ${answer}</p>
         `;
 
                 // Display the appropriate button based on the is_marked value
                 if (isMarked == 1) {
                     reMarkQuestionButton.style.display = 'inline-block';
+                    deleteQuestionButton.style.display = 'inline-block';
                     markQuestionButton.style.display = 'none';
                 } else if (isMarked == 0) {
                     markQuestionButton.style.display = 'inline-block';
                     reMarkQuestionButton.style.display = 'none';
+                    deleteQuestionButton.style.display = 'none';
                 }
             });
         });
-
 
         document.addEventListener('DOMContentLoaded', function() {
             const markQuestionToggle = document.getElementById('markQuestionToggle');
@@ -289,16 +489,48 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']))
                 markQuestionLabel.textContent = isChecked ? 'True' : 'False';
 
                 // Remove existing classes
-                markQuestionLabel.classList.remove('badge', 'rounded-pill', 'text-bg-success', 'text-bg-danger');
+                markQuestionLabel.classList.remove('text-bg-success', 'text-bg-danger');
 
                 // Add the appropriate classes based on the state
                 if (isChecked) {
-                    markQuestionLabel.classList.add('badge', 'rounded-pill', 'text-bg-success');
+                    markQuestionLabel.classList.add('text-bg-success');
                 } else {
-                    markQuestionLabel.classList.add('badge', 'rounded-pill', 'text-bg-danger');
+                    markQuestionLabel.classList.add('text-bg-danger');
                 }
             });
         });
+    </script>
+
+    <script>
+        // Restore scroll position after page reload
+        window.addEventListener('load', function() {
+            const scrollPosition = sessionStorage.getItem('scrollPosition');
+            if (scrollPosition) {
+                window.scrollTo(0, scrollPosition);
+                sessionStorage.removeItem('scrollPosition'); // Remove after restoring
+            }
+        });
+    </script>
+
+    <script>
+        // Function to handle the onchange event of the recordsPerPage drop-down
+        function onRecordsPerPageChange() {
+            // Get the selected value of recordsPerPage
+            var selectedValue = document.getElementById("recordsPerPage").value;
+
+            // Set the "page" to 1
+            var currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set("page", 1);
+
+            // Update the URL to include the selected recordsPerPage value
+            currentUrl.searchParams.set("recordsPerPage", selectedValue);
+
+            // Redirect to the updated URL
+            window.location.href = currentUrl.toString();
+        }
+
+        // Add an event listener to the recordsPerPage drop-down
+        document.getElementById("recordsPerPage").addEventListener("change", onRecordsPerPageChange);
     </script>
 
 </body>

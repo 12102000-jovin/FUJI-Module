@@ -59,20 +59,52 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST["question_name"]) && 
     $stmt->close();
 }
 
+$showModal = false; // Initialize variable to control modal display
+
 if (isset($_POST['delete_question_id'])) {
     $deleteQuestionId = $_POST['delete_question_id'];
-    var_dump($deleteQuestionId);
 
-    $deleteQuestionSql = "DELETE FROM written_questions WHERE written_question_id = ?";
-    $stmt = $conn->prepare($deleteQuestionSql);
-    $stmt->bind_param("i", $deleteQuestionId);
+    // Check for dependencies before attempting to delete
+    $checkDependenciesSql = "SELECT COUNT(*) FROM written_answers WHERE written_question_id = ?";
+    $stmtCheck = $conn->prepare($checkDependenciesSql);
+    $stmtCheck->bind_param("i", $deleteQuestionId);
+    $stmtCheck->execute();
+    $stmtCheck->bind_result($dependencyCount);
+    $stmtCheck->fetch();
+    $stmtCheck->close();
 
-    if ($stmt->execute()) {
-        // Redirect to the same page after updating
-        header("Location: " . $_SERVER['REQUEST_URI']);
-        exit();
+    if ($dependencyCount > 0) {
+        // Set the variable to show the modal
+        $showModal = true;
     } else {
-        echo "Error deleting data: . $stmt->error";
+        // No dependencies, proceed with deletion
+        $deleteQuestionSql = "DELETE FROM written_questions WHERE written_question_id = ?";
+        $stmt = $conn->prepare($deleteQuestionSql);
+        $stmt->bind_param("i", $deleteQuestionId);
+
+        if ($stmt->execute()) {
+            // Redirect to the same page after updating
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit();
+        } else {
+            echo "Error deleting data: " . $stmt->error;
+        }
+    }
+}
+
+if (isset($_POST['add_question'])) {
+    // Sanitise and get the input values
+    $writtenQuestion = htmlspecialchars($_POST['add_question']);
+
+    // Insert the question into the database
+    $add_query = "INSERT INTO written_questions (question, module_id) VALUES ('$writtenQuestion', '$module_id')";
+    $add_result = $conn->query($add_query);
+
+    if ($add_result) {
+        echo "Question added successfully!";
+        header("Location: " . $_SERVER['REQUEST_URI']);
+    } else {
+        echo "Error adding question: " . $conn->error;
     }
 }
 ?>
@@ -88,7 +120,7 @@ if (isset($_POST['delete_question_id'])) {
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <title>Written Quiz List</title>
+    <title>Essay Questions</title>
 </head>
 
 <style>
@@ -126,9 +158,9 @@ if (isset($_POST['delete_question_id'])) {
 
     <div class="container">
         <div class="text-center mt-5 mb-5">
-            <h1>Written Questions</h1>
+            <h1>Essay Questions</h1>
             <p>Module: <strong> <?php echo $module_name ?> </strong></p>
-            <a href="add-written-questions.php?module_id=<?php echo $module_id ?>" type="button" class="btn btn-dark">+ Add Question</a>
+            <a data-bs-toggle='modal' data-bs-target='#addQuestionModal' type="button" class="btn btn-dark">+ Add Question</a>
         </div>
     </div>
 
@@ -165,6 +197,9 @@ if (isset($_POST['delete_question_id'])) {
             }
             ?>
         </div>
+        <div class="d-flex justify-content-center mt-5">
+            <a class="btn btn-dark" href="modules.php"> Back </a>
+        </div>
     </div>
 
     <!-- Footer Section -->
@@ -195,6 +230,31 @@ if (isset($_POST['delete_question_id'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Add Question Modal -->
+    <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addQuestionModalLabel">Add Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" id="addForm">
+                        <div class="mb-3">
+                            <label for="add_question" class="form-label">New Question </label>
+                            <textarea type="text" class="form-control" id="addQuestionName" name="add_question"> </textarea>
+                            <input type="hidden" id="addQuestionId" name="question_id">
+                        </div>
+                        <div class="modal-footer justify-content-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" form="addForm" class="btn signature-btn">Add Question</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Question Modal -->
     <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -207,7 +267,7 @@ if (isset($_POST['delete_question_id'])) {
                     <form method="POST" id="editForm">
                         <div class="mb-3">
                             <label for="editQuestionName" class="form-label">Question Name</label>
-                            <input type="text" class="form-control" id="editQuestionName" name="question_name">
+                            <textarea type="text" class="form-control" id="editQuestionName" name="question_name"> </textarea>
                             <input type="hidden" id="editQuestionId" name="question_id">
                         </div>
                         <div class="modal-footer justify-content-end">
@@ -244,6 +304,35 @@ if (isset($_POST['delete_question_id'])) {
         </div>
     </div>
 
+    <?php if ($showModal) : ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var myModal = new bootstrap.Modal(document.getElementById('dependencyModal'));
+                myModal.show();
+            });
+        </script>
+    <?php endif; ?>
+
+    <!-- Dependency Modal -->
+    <div class="modal fade" id="dependencyModal" tabindex="-1" role="dialog" aria-labelledby="dependencyModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dependencyModalLabel">Dependency Warning</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    This question cannot be deleted due to existing dependencies.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Enabling the tooltipi
         const tooltips = document.querySelectorAll('.tooltips');
@@ -265,6 +354,8 @@ if (isset($_POST['delete_question_id'])) {
         document.querySelectorAll('.delete-question').forEach(item => {
             item.addEventListener('click', function(event) {
                 const questionId = this.getAttribute('data-question-id');
+
+                // Set the question id for deletion when the modal confirms
                 document.getElementById('deleteQuestionId').value = questionId;
             });
         });

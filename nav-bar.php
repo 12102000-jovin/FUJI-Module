@@ -49,8 +49,14 @@
                 </li>
 
                 <!-- Progress Link -->
-                <li class="nav-item">
-                    <a class="nav-link" href="progress.php">Progress</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle signature-color" href="#" id="progressDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Progress
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end " aria-labelledby="progressDropdown">
+                        <li><a class="dropdown-item" href="progress.php">Progress (MCQ)</a></li>
+                        <li><a class="dropdown-item" href="written-progress.php">Progress (Essay)</a></li>
+                    </ul>
                 </li>
 
                 <!-- Profile Link -->
@@ -65,14 +71,20 @@
                             Admin
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-                            <li><a class="dropdown-item" href="report.php">Report</a></li>
+                            <li><a class="dropdown-item" href="report.php">Report (MCQ)</a></li>
+                            <li><a class="dropdown-item" href="written-report.php">Report (Essay)</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="archive.php">Archive Modules</a></li>
                             <li><a class="dropdown-item" href="allocate.php">Manage Users</a></li>
                             <li><a class="dropdown-item" href="allocate-group.php">Allocate by Department</a></li>
                             <li><a class="dropdown-item" href="department.php">Manage Department</a></li>
                             <li><a class="dropdown-item" href="licenses.php">Manage Licenses</a></li>
+                            <li><a class="dropdown-item" href="written-question-module.php">Mark Essay Question</a></li>
                         </ul>
                     </li>
+
                 <?php endif; ?>
 
                 <!-- Supervisor-specific Dropdown -->
@@ -85,19 +97,12 @@
                             <li><a class="dropdown-item" href="report.php">Report</a></li>
                             <li><a class="dropdown-item" href="allocate.php">Manage Users</a></li>
                             <li><a class="dropdown-item" href="allocate-group.php">Allocate by Department</a></li>
+                            <li><a class="dropdown-item" href="written-question-module.php">Mark Essay Question</a></li>
                         </ul>
                     </li>
                 <?php endif; ?>
 
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle signature-color" href="#" id="written-question" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Written
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="written-question">
-                        <li><a class="dropdown-item" href="written-question.php">Written Question</a></li>
-                        <li><a class="dropdown-item" href="written-question-list.php">Written Question List</a></li>
-                    </ul>
-                </li>
+
                 <!-- Logout Button -->
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
