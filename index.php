@@ -1,8 +1,9 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 
-// Start the session, to load all the Session Variables
-session_start();
 // Connect to the database
 require_once("db_connect.php");
 // Checking the inactivity 
@@ -88,6 +89,74 @@ $modulesQuery = "
 // Execute the SQL query and store the result set in $moduleResult
 $modulesResult = $conn->query($modulesQuery);
 
+function getCountForModule($conn, $moduleId, $employeeId)
+{
+  // Check if there is any data in written_results for the current module
+  $checkDataQuery = "SELECT COUNT(*) AS data_count FROM written_results WHERE module_id = $moduleId AND employee_id = $employeeId";
+  $checkDataResult = $conn->query($checkDataQuery);
+
+  if ($checkDataResult) {
+    $checkDataRow = $checkDataResult->fetch_assoc();
+    $dataCount = $checkDataRow['data_count'];
+
+    // If there is no data, return NULL
+    if ($dataCount == 0) {
+      return null;
+    } else {
+      // Query to count the number of '0' values in 'is_correct' for the current module
+      $countQuery = "SELECT COUNT(*) AS zero_count FROM written_results WHERE module_id = $moduleId AND is_correct = 0 AND employee_id = $employeeId";
+      $countResult = $conn->query($countQuery);
+
+      if ($countResult) {
+        $countRow = $countResult->fetch_assoc();
+        $zeroCount = $countRow['zero_count'];
+
+        // Free up the memory used by the count result set
+        $countResult->free();
+
+        // Return the count value (even if it's 0)
+        return $zeroCount;
+      } else {
+        // Display an error message if the count query fails
+        echo "Error executing the count query: " . $conn->error;
+      }
+    }
+
+    // Free up the memory used by the check data result set
+    $checkDataResult->free();
+  } else {
+    // Display an error message if the check data query fails
+    echo "Error executing the check data query: " . $conn->error;
+  }
+
+  return null;
+}
+
+function getUnmarkedQuestionCount($conn, $moduleId, $employeeId)
+{
+
+  // SQL query to count unmarked questions
+  $sql = "SELECT COUNT(*) as unmarked_count
+    FROM written_answers wa
+    LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
+    WHERE wr.written_answer_id IS NULL AND wa.module_id = $moduleId AND wa.employee_id = $employeeId";
+
+  // Execute the query
+  $result = $conn->query($sql);
+
+  // Check if the query was successful
+  if ($result === false) {
+    die("Error executing query: " . $conn->error);
+  }
+
+  // Fetch the result
+  $row = $result->fetch_assoc();
+
+  // Return the count of unmarked questions
+  return $row['unmarked_count'];
+}
+
+
 /* ================================================================================== */
 
 // Retrieve modules from the 'modules' table that have been attempted by the user along with the highest score
@@ -134,8 +203,6 @@ $unattemptedModulesQuery = "
   ";
 $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
 
-// Close the database connection
-$conn->close();
 ?>
 
 <!-- ==================================================================================  -->
@@ -229,10 +296,6 @@ $conn->close();
           $moduleName = $unattemptedModuleRow['module_name'];
           $moduleDescription = $unattemptedModuleRow['module_description'];
           $moduleImage = $unattemptedModuleRow['module_image'];
-          $moduleScore = $attemptedModulesRow['score'];
-
-          // Store the highest score for the module
-          $highestScores[$moduleId] = $moduleScore;
 
           // Limit the description to a maximum of 100 characters
           $maxCharacters = 100;
@@ -256,13 +319,12 @@ $conn->close();
                     ?>
                   </p>
                   <?php
-                  // Check if the module is uncompleted (score < 100) or is_correct is 0
-                  if ($moduleScore < 100 || $unattemptedModuleRow['is_correct'] == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                  // Show "To-Do" badge
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
                                 <span class="visually-hidden">New alerts</span>
                                 <span style="font-size: 8px">To-Do</span>
                               </span>';
-                  }
+
                   ?>
                 </div>
               </div>
@@ -405,7 +467,7 @@ $conn->close();
           <div class="col-12">
             <hr>
             <div class="d-flex justify-content-between align-items-center">
-              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold"> All Modules</h3>
+              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold">All Modules</h3>
               <?php if ($numModulesResult > 3) : ?>
                 <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
               <?php elseif ($numModulesResult != 1) : ?>
@@ -426,6 +488,17 @@ $conn->close();
             $moduleImage = $moduleRow['module_image'];
             $moduleScore = $moduleRow['score'];
             $isCorrect = $moduleRow['is_correct'];
+
+            // Get the count for the current module
+            $countForModule = getCountForModule($conn, $moduleId, $employee_id);
+
+            // Output the count for the current module
+            echo "Number of False answer:  $countForModule <br><br>";
+
+
+            // Example usage
+            $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
+            echo "Number of unmarked questions: $unmarkedCount";
 
             // Limit the description to a maximum of 100 character
             $maxCharacters = 100;
@@ -451,26 +524,36 @@ $conn->close();
                   </div>
                   <?php
                   // Check if the module is uncompleted or has less than 100% score
-                  if ($moduleScore < 100 && $isCorrect == 0) {
+                  if ($moduleScore < 100 && $countForModule === null) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                    <span class="visually-hidden">New alerts</span>
-                    <span style="font-size: 8px">To-Do</span>
-                </span>';
-                  } else if ($moduleScore < 100) {
+      <span class="visually-hidden">New alerts</span>
+      <span style="font-size: 8px">To-Do</span>
+  </span>';
+                  } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                    <span class="visually-hidden">New alerts</span>
-                    <span style="font-size: 8px">MCQ!</span>
-                </span>';
-                  } else if ($isCorrect == 0) {
+      <span class="visually-hidden">New alerts</span>
+      <span style="font-size: 8px">Essay!</span>
+  </span>';
+                  } else if ($moduleScore == 100 && $unmarkedCount > 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                  <span class="visually-hidden">New alerts</span>
-                  <span style="font-size: 8px">Essay!</span>
-              </span>';
-                  } else if ($moduleScore == 100 && $isCorrect == 1) {
+      <span class="visually-hidden">New alerts</span>
+      <span style="font-size: 8px">Unmarked!</span>
+  </span>';
+                  } else if ($moduleScore < 100 && $countForModule == 0) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+      <span class="visually-hidden">New alerts</span>
+      <span style="font-size: 8px">MCQ!</span>
+  </span>';
+                  } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+      <span class="visually-hidden">New alerts</span>
+      <span style="font-size: 8px">UnMarked!</span>
+  </span>';
+                  } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
-                            <span class="visually-hidden">New alerts</span>
-                            <span style="font-size: 8px">Done</span>
-                        </span>';
+      <span class="visually-hidden">New alerts</span>
+      <span style="font-size: 8px">Done</span>
+  </span>';
                   }
                   ?>
                 </div>
@@ -525,3 +608,9 @@ $conn->close();
 </body>
 
 </html>
+
+<?php
+// Close the database connection
+$conn->close();
+
+?>
