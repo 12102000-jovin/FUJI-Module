@@ -79,7 +79,8 @@ LEFT JOIN
     written_questions wq ON wa.written_question_id = wq.written_question_id
 WHERE
     wa.module_id = $module_id
-    AND wr.written_answer_id IS NULL;
+    AND wr.written_answer_id IS NULL
+    AND wr.employee_id = $employee_id;
 ";
 
 $countResult = $conn->query($countSql);
@@ -150,51 +151,53 @@ if ($countResult->num_rows > 0) {
         </div>
     </div>
 
-    <div class="container mb-2 p-4 bg-light rounded-3 shadow-lg table-border">
-        <?php
-        if ($selectResult->num_rows > 0) {
-        ?>
-            <table class="table table-striped table-hover table-bordered mt-2 text-center">
-                <thead class="align-middle">
-                    <tr>
-                        <th>Question</th>
-                        <th>Employee Name</th>
-                        <th>Feedback</th>
-                        <th>Grader</th>
-                        <th>Graded At</th>
-                        <th>Result</th>
-                    </tr>
-                </thead>
-                <tbody class="align-middle">
-                    <?php
-                    while ($row = $selectResult->fetch_assoc()) {
-                    ?>
+    <div class="container mb-5 p-4 bg-light rounded-3 shadow-lg table-border">
+        <div class="d-flex justify-content-center">
+            <?php
+            if ($selectResult->num_rows > 0) {
+            ?>
+                <table class="table table-striped table-hover table-bordered mt-2 text-center">
+                    <thead class="align-middle">
                         <tr>
-                            <td><?php echo $row["question"] ?></td>
-                            <td><?php echo $row["employee_full_name"] ?></td>
-                            <td><?php echo $row["feedback"]; ?></td>
-                            <td><?php echo $row["grader_full_name"]; ?></td>
-                            <td><?php echo $row["graded_at"]; ?></td>
-                            <td>
-                                <?php
-                                if ($row["is_correct"] === "0") {
-                                    echo "<span class='badge rounded-pill text-bg-danger' style='font-size:16px'>False</span>";
-                                } else if ($row['is_correct'] === "1") {
-                                    echo "<span class='badge rounded-pill text-bg-success' style='font-size:16px'>True</span>";
-                                }
-                                ?>
-                            </td>
+                            <th>Question</th>
+                            <th>Employee Name</th>
+                            <th>Feedback</th>
+                            <th>Grader</th>
+                            <th>Graded At</th>
+                            <th>Result</th>
                         </tr>
-                    <?php
-                    }
-                    ?>
-                </tbody>
-            </table>
-        <?php
-        } else {
-            echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any essay quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
-        }
-        ?>
+                    </thead>
+                    <tbody class="align-middle">
+                        <?php
+                        while ($row = $selectResult->fetch_assoc()) {
+                        ?>
+                            <tr>
+                                <td><?php echo $row["question"] ?></td>
+                                <td><?php echo $row["employee_full_name"] ?></td>
+                                <td><?php echo $row["feedback"]; ?></td>
+                                <td><?php echo $row["grader_full_name"]; ?></td>
+                                <td><?php echo $row["graded_at"]; ?></td>
+                                <td>
+                                    <?php
+                                    if ($row["is_correct"] === "0") {
+                                        echo "<span class='badge rounded-pill text-bg-danger' style='font-size:16px'>False</span>";
+                                    } else if ($row['is_correct'] === "1") {
+                                        echo "<span class='badge rounded-pill text-bg-success' style='font-size:16px'>True</span>";
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                        <?php
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            <?php
+            } else {
+                echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any essay quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
+            }
+            ?>
+        </div>
     </div>
 
     <!-- Logout Modal -->
