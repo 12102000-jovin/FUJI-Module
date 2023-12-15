@@ -188,12 +188,17 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <div class="container mt-5">
+
+
+    <div class="container">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
         <h1 class="text-center"><strong> Module Allocation </strong></h1>
     </div>
 
     <div class="container">
-        <div class="mb-5 mt-5">
+        <div class="mb-5">
             <div class="row justify-content-center">
                 <form method="POST" class="col-md-5 col-sm-8 bg-light shadow p-4 rounded-3 mt-5 m-1">
                     <div class="form-group row">
@@ -260,8 +265,7 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <div class="text-center mt-5 mb-5 col-sm-12">
-        <a class="btn btn-secondary" href="allocate.php" role="button">Back</a>
+    <div class="text-center mb-5 col-sm-12">
         <input class="btn btn-dark" type="submit" id="allocateButton" value="Allocate">
     </div>
 

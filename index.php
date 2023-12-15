@@ -237,6 +237,19 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
         display: inline;
       }
     }
+
+    /* .accordion-button:not(.collapsed) {
+      background-color: #043f9d;
+    }
+
+    .accordion-button {
+      background-color: #043f9d;
+    } */
+
+    .accordion-button::after {
+      /* Set filter values for white color */
+      filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+    }
   </style>
 
   <!-- Title of the page -->
@@ -258,7 +271,9 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
         <h1>Welcome, <?php echo $full_name; ?></h1>
         <p class="fs-6 mt-3"><strong>Employee ID: <?php echo $employee_id; ?></strong></p>
         <p class="fs-6 mt-3"><strong>Department: <?php echo $department_name; ?></strong></p>
-        <a href="modules.php" class="btn mt-3 text-white bg-dark CTA-btn">Go to Modules</a>
+        <div class="d-flex justify-content-center align-items-center">
+          <a href="modules.php" class="btn mt-3 text-white bg-dark CTA-btn">Go to Modules</a>
+        </div>
       </div>
     </div>
   </div>
@@ -321,7 +336,6 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   <?php
                   // Show "To-Do" badge
                   echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                                <span class="visually-hidden">New alerts</span>
                                 <span style="font-size: 8px">To-Do</span>
                               </span>';
 
@@ -379,6 +393,18 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
           $moduleScore = $attemptedModulesRow['score'];
           $isCorrect = $attemptedModulesRow['is_correct'];
 
+
+          // Get the count for the current module
+          $countForModule = getCountForModule($conn, $moduleId, $employee_id);
+
+          // Output the count for the current module
+          echo "Number of False answer:  $countForModule <br><br>";
+
+
+          // Example usage
+          $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
+          echo "Number of unmarked questions: $unmarkedCount";
+
           // Check if the module has already been added with a higher score
           if (isset($highestScores[$moduleId]) && $highestScores[$moduleId] >= $moduleScore) {
             continue; // Skip this module
@@ -413,26 +439,30 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </div>
                 <?php
                 // Check if the module is uncompleted or has less than 100% score
-                if ($moduleScore < 100 && $isCorrect == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                  <span class="visually-hidden">New alerts</span>
-                  <span style="font-size: 8px">To-Do</span>
-              </span>';
-                } else if ($moduleScore < 100) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                  <span class="visually-hidden">New alerts</span>
-                  <span style="font-size: 8px">MCQ!</span>
-              </span>';
-                } else if ($isCorrect == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                <span class="visually-hidden">New alerts</span>
-                <span style="font-size: 8px">Essay!</span>
-            </span>';
-                } else if ($moduleScore == 100 && $isCorrect == 1) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
-                  <span class="visually-hidden">New alerts</span>
-                  <span style="font-size: 8px">Done</span>
-              </span>';
+                if ($moduleScore < 100 && $countForModule === null) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
+                              <span style="font-size: 8px">To-Do</span>
+                          </span>';
+                } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
+                              <span style="font-size: 8px">Essay!</span>
+                          </span>';
+                } else if ($moduleScore == 100 && $unmarkedCount > 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                            <span style="font-size: 8px">Unmarked!</span>
+                        </span>';
+                } else if ($moduleScore < 100 && $countForModule == 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                            <span style="font-size: 8px">MCQ!</span>
+                        </span>';
+                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                            <span style="font-size: 8px">UnMarked!</span>
+                        </span>';
+                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center
+                            <span style="font-size: 8px">Done</span>
+                        </span>';
                 }
                 ?>
                 <div class="m-3">
@@ -525,35 +555,29 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   <?php
                   // Check if the module is uncompleted or has less than 100% score
                   if ($moduleScore < 100 && $countForModule === null) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-      <span class="visually-hidden">New alerts</span>
-      <span style="font-size: 8px">To-Do</span>
-  </span>';
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
+                              <span style="font-size: 8px">To-Do</span>
+                          </span>';
                   } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-      <span class="visually-hidden">New alerts</span>
-      <span style="font-size: 8px">Essay!</span>
-  </span>';
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
+                              <span style="font-size: 8px">Essay!</span>
+                          </span>';
                   } else if ($moduleScore == 100 && $unmarkedCount > 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-      <span class="visually-hidden">New alerts</span>
-      <span style="font-size: 8px">Unmarked!</span>
-  </span>';
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                            <span style="font-size: 8px">Unmarked!</span>
+                        </span>';
                   } else if ($moduleScore < 100 && $countForModule == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-      <span class="visually-hidden">New alerts</span>
-      <span style="font-size: 8px">MCQ!</span>
-  </span>';
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                            <span style="font-size: 8px">MCQ!</span>
+                        </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-      <span class="visually-hidden">New alerts</span>
-      <span style="font-size: 8px">UnMarked!</span>
-  </span>';
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                            <span style="font-size: 8px">UnMarked!</span>
+                        </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
-      <span class="visually-hidden">New alerts</span>
-      <span style="font-size: 8px">Done</span>
-  </span>';
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center
+                            <span style="font-size: 8px">Done</span>
+                        </span>';
                   }
                   ?>
                 </div>
@@ -574,35 +598,100 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
         </div>
       </div>
 
-      <!-- Logout Modal -->
-      <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              Are you sure you want to logout?
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <a href="?logout=true" class="btn btn-danger">Logout</a>
+      <div class="mt-5"></div>
+
+      <!-- ======================== B A D G E S ======================== -->
+      <div class="container mb-5">
+        <div class="row d-flex justify-content-center">
+          <div class="container">
+            <hr>
+          </div>
+          <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold mb-3">Badges</h3>
+          <div class="col-md-10">
+            <div class="accordion" id="accordionExample">
+              <!-- ======================== T o - D o ======================== -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <span class=" badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                      <span style="font-size: 14px">To-Do</span>
+                    </span>
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                    <p style="text-align: justify" ;>The 'To-Do' badge signifies that the module is either unattempted, incomplete, or has a score below 100% in the Multiple Choice Question (MCQ) section.</p>
+                  </div>
+                </div>
+              </div>
+              <!-- ======================== E S S A Y ! ======================== -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <span class=" badge badge-lg badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                      <span style="font-size: 14px">Essay!</span>
+                    </span>
+                  </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                    <p style="text-align: justify">The "Essay!" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ), but there are either essays to be completed, false answer, or unmarked essays. </p>
+                  </div>
+                </div>
+              </div>
+              <!-- ======================== M C Q ! ======================== -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    <span class=" badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                      <span style="font-size: 14px">MCQ!</span>
+                    </span>
+                  </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                    <p>The "MCQ!" badge indicates that the module has less than a 100% score on the Multiple Choice Question (MCQ), but the essay quiz for the module is completed. </p>
+                  </div>
+                </div>
+              </div>
+              <!-- ======================== U n m a r k e d ======================== -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseThree">
+                    <span class=" badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                      <span style="font-size: 14px">Unmarked</span>
+                    </span>
+                  </button>
+                </h2>
+                <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                    <p>The "Unmarked" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ), but there are unmarked questions. You can check it in the "Essay Progress" page </p>
+                  </div>
+                </div>
+              </div>
+              <!-- ======================== D O N E ======================== -->
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseThree">
+                    <span class=" badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
+                      <span style="font-size: 14px">Done</span>
+                    </span>
+                  </button>
+                </h2>
+                <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                    <p>The "Done" badge indicates that the module has already been completed, and no further actions required for the module.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ==================================================================================  -->
-
       <div class="mt-5"></div>
 
-      <!-- Footer Section -->
-      <footer class="bg-light text-center py-4 mt-auto shadow">
-        <div class="container">
-          <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-      </footer>
+      <?php require_once("footer_logout.php") ?>
 
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

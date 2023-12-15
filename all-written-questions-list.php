@@ -123,52 +123,23 @@ if (isset($_POST['add_question'])) {
     <title>Essay Questions</title>
 </head>
 
-<style>
-    /* Add custom CSS styles here */
-    @media (max-width: 576px) {
-
-        /* Adjust table styles for small screens */
-        table {
-            font-size: 10px;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .pagination .page-item .page-link {
-            font-size: 10px;
-        }
-
-        .search {
-            margin-bottom: 5px;
-        }
-    }
-
-    .table thead th {
-        background-color: #043f9d;
-        color: white;
-        border: 1px solid #043f9d !important;
-    }
-</style>
-
 <body class="d-flex flex-column min-vh-100">
     <?php require_once("nav-bar.php"); ?>
 
     <div class="container">
-        <div class="text-center mt-5 mb-5">
-            <h1>Essay Questions</h1>
-            <p>Module: <strong> <?php echo $module_name ?> </strong></p>
-            <a data-bs-toggle='modal' data-bs-target='#addQuestionModal' type="button" class="btn btn-dark">+ Add Question</a>
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
-    </div>
 
-    <div class="container">
+        <div class="text-center mb-3">
+            <h1> <strong>Essay Questions</strong></h1>
+            <p>Module: <strong> <?php echo $module_name ?> </strong></p>
+            <a data-bs-toggle='modal' data-bs-target='#addQuestionModal' type="button" class="btn btn-dark addQuestionBtn ">+ Add Question</a>
+        </div>
         <div class="p-4 bg-light rounded-3 shadow-lg">
             <?php
             if ($select_result && $select_result->num_rows > 0) {
-                echo '<table class="table table-bordered table-striped border table-hover">';
+                echo '<table class="table table-bordered table-striped border table-hover mt-3">';
                 echo '<thead>';
                 echo '<tr>';
                 echo '<th class="text-center">Questions</th>';
@@ -197,36 +168,9 @@ if (isset($_POST['add_question'])) {
             }
             ?>
         </div>
-        <div class="d-flex justify-content-center mt-5">
-            <a class="btn btn-dark" href="modules.php"> Back </a>
-        </div>
     </div>
 
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php require_once("footer_logout.php") ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 

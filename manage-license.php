@@ -235,23 +235,22 @@ $conn->close();
             object-position: center;
         }
 
-        @media (max-width: 576px) {
-
-            /* Adjust table styles for small screens */
-            table {
-                font-size: 12px;
-            }
-
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-        }
-
         .table thead th {
             background-color: #043f9d;
             color: white;
             border: 1px solid #043f9d !important;
+        }
+
+        @media (max-width:576px) {
+
+            .addBtn,
+            .manageBtn {
+                font-size: 12px;
+            }
+        }
+
+        .no-wrap {
+            white-space: nowrap;
         }
     </style>
 
@@ -268,6 +267,12 @@ $conn->close();
     <!-- ================================================================================== -->
 
     <div class="container mt-5">
+        <div class="d-flex justify-content-start">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
+        <div class="d-flex justify-content-center mb-3">
+            <h1><strong>Manage License</strong></h1>
+        </div>
         <div class="row justify-content-center">
             <div class="col-md-12">
                 <div class=" bg-light rounded-3 p-4 shadow-lg">
@@ -311,9 +316,9 @@ $conn->close();
 
                     <div class="d-flex justify-content-between mb-3">
                         <div class="d-flex align-items-center">
-                            <h4 class="my-0">User Licenses</h4>
+                            <h4 class="my-0"><strong> User Licenses </strong></h4>
                         </div>
-                        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#addLicenseModal">
+                        <button type="button" class="btn btn-dark addBtn" data-bs-toggle="modal" data-bs-target="#addLicenseModal">
                             + Add License
                         </button>
                     </div>
@@ -321,7 +326,7 @@ $conn->close();
                     <div class="table-responsive">
                         <table class="table table-striped table-hover border">
                             <thead class="signature-bg-color">
-                                <tr class="text-center">
+                                <tr class="text-center align-middle">
                                     <th>License Id</th>
                                     <th>License Name</th>
                                     <th>Issue Date</th>
@@ -329,14 +334,14 @@ $conn->close();
                                     <th colspan="2"> Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="align-middle">
                                 <?php if ($currentLicenseResult->num_rows > 0) {
                                     while ($row = $currentLicenseResult->fetch_assoc()) { ?>
                                         <tr class="text-center">
                                             <td><?php echo $row["license_number"]; ?></td>
-                                            <td><?php echo $row["license_name"]; ?></td>
-                                            <td><?php echo $row["issue_date"]; ?></td>
-                                            <td><?php echo $row["expiration_date"]; ?></td>
+                                            <td class="no-wrap"><?php echo $row["license_name"]; ?></td>
+                                            <td class="no-wrap"><?php echo $row["issue_date"]; ?></td>
+                                            <td class="no-wrap"><?php echo $row["expiration_date"]; ?></td>
                                             <td>
                                                 <a href="#" onclick="showEditModal(<?php echo $employee_id; ?>, <?php echo $row['license_id']; ?>, '<?php echo $row['issue_date']; ?>', '<?php echo $row['expiration_date']; ?>', '<?php echo $row['license_number']; ?>')">
                                                     <i class="fa-regular fa-pen-to-square signature-color tooltips" data-toggle="tooltip" data-placement="top" title="Edit License Date"></i>
@@ -365,24 +370,24 @@ $conn->close();
     <!-- ================================================================================== -->
 
     <!-- License Data Table -->
-    <div class="container">
+    <div class="container mb-5">
         <div class="mb-3 mt-5">
             <div class="p-4 bg-light rounded-3 shadow-lg">
                 <div class="d-flex justify-content-between mb-3">
                     <div class="d-flex align-items-center">
-                        <h4 class="my-0">All Licenses</h4>
+                        <h4 class="my-0"><strong> All Licenses </strong></h4>
                     </div>
-                    <a type="button" class="btn btn-dark" href="licenses.php">
+                    <a type="button" class="btn btn-dark manageBtn" href="licenses.php">
                         Manage License
                     </a>
                 </div>
                 <table class="table table-striped table-hover border">
-                    <thead>
+                    <thead class="align-middle">
                         <tr>
                             <th>License Name</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="align-middle">
                         <?php
                         if ($allLicenseResult->num_rows > 0) {
                             // Output data of each row
@@ -399,12 +404,6 @@ $conn->close();
                 </table>
             </div>
         </div>
-    </div>
-
-    <!-- ================================================================================== -->
-    <!-- Back to Allocate.php button -->
-    <div class="container text-center mb-5">
-        <a class="btn btn-dark" href="allocate.php" role="button">Back to Allocate</a>
     </div>
 
     <!-- ================================================================================== -->
@@ -552,34 +551,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- ================================================================================== -->
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
-
+    <?php require_once("footer_logout.php") ?>
     <!-- ================================================================================== -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

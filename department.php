@@ -146,34 +146,6 @@ $conn->close();
             background-color: #043f9d;
             border-color: #043f9d;
         }
-
-        /* Add custom CSS styles here */
-        @media (max-width: 576px) {
-
-            /* Adjust table styles for small screens */
-            table {
-                font-size: 10px;
-            }
-
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .pagination .page-item .page-link {
-                font-size: 10px;
-            }
-
-            .search {
-                margin-bottom: 5px;
-            }
-        }
-
-        .table thead th {
-            background-color: #043f9d;
-            color: white;
-            border: 1px solid #043f9d !important;
-        }
     </style>
 
     <!-- Title of the page -->
@@ -204,13 +176,17 @@ $conn->close();
     <?php require_once("nav-bar.php"); ?>
 
     <div class="container">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
         <div class="mb-3">
-            <div class="container text-center mt-5 mb-5">
-                <h1><strong> All Department </strong></h1>
+            <div class="container text-center mb-3">
+                <h1><strong> All Departments </strong></h1>
+                <a class="btn btn-dark mt-3" href="#" data-bs-toggle="modal" data-bs-target="#addDepartmentModal" role="button"> + Add Department </a>
             </div>
             <div class="p-4 bg-light rounded-3 shadow-lg">
-                <table class="table table-striped table-hover border text-center">
-                    <thead>
+                <table class="table table-striped table-hover border text-center mt-3">
+                    <thead class="align-middle">
                         <tr>
                             <th style="width: 15vw">Department ID</th>
                             <th>Department Name</th>
@@ -242,13 +218,8 @@ $conn->close();
                             <?php  } ?>
                     </tbody>
                 </table>
-                <a class="btn btn-dark" href="#" data-bs-toggle="modal" data-bs-target="#addDepartmentModal" role="button"> + Add Department </a>
             </div>
         </div>
-    </div>
-
-    <div class="d-flex justify-content-center">
-        <a class="btn btn-dark" href="index.php">Back </a>
     </div>
 
     <!-- Add Deparment Modal -->
@@ -356,31 +327,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <!-- JS for the tooltip -->
     <script>

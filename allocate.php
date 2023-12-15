@@ -216,36 +216,40 @@ $conn->close();
             border-color: #043f9d;
         }
 
-        /* Add custom CSS styles here */
-        @media (max-width: 576px) {
-
-            /* Adjust table styles for small screens */
-            table {
-                font-size: 10px;
-            }
-
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .pagination .page-item .page-link {
-                font-size: 10px;
-            }
-
-            .search {
-                margin-bottom: 5px;
-            }
-
-            .createNewUserBtn {
-                font-size: 8px;
-            }
-        }
-
         .table thead th {
             background-color: #043f9d;
             color: white;
             border: 1px solid #043f9d !important;
+        }
+
+        .action-column {
+            width: 200px;
+        }
+
+        /* Add custom CSS styles here */
+        @media (max-width: 576px) {
+            .pagepagination label {
+                font-size: 12px;
+            }
+
+            .form-select {
+                font-size: 12px;
+                width: 65px !important;
+            }
+
+            .search {
+                font-size: 12px;
+                padding: 9px;
+                margin-top: 4px;
+            }
+
+            .createNewUserBtn {
+                font-size: 12px;
+            }
+        }
+
+        .no-wrap {
+            white-space: nowrap;
         }
     </style>
 
@@ -268,201 +272,179 @@ $conn->close();
 
     <div class="container">
         <div class="mt-5">
-            <div class="container text-center mb-5">
+            <div class="d-flex justify-content-start mt-5">
+                <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+            </div>
+            <div class="container text-center mb-4">
                 <h1><strong>All Users</strong></h1>
             </div>
 
-            <div class="container p-2 shadow-lg rounded-2 bg-light">
-                <div class="container mb-4">
-                    <div class="row justify-content-between align-items-center mt-4">
-                        <div class="col-md-6">
-                            <form method="GET" action="allocate.php" class="search ">
-                                <div class="d-flex align-items-center">
-                                    <input type="search" name="search_query" class="form-control me-2 test" placeholder="Search users" value="<?php echo htmlspecialchars($search_query); ?>">
-                                    <button type="submit" class="btn signature-btn">Search</button>
-                                </div>
-                            </form>
-                        </div>
+        </div>
+        <?php
+        if ($role === 'admin') {
+            echo '<div class="d-flex justify-content-center">';
+            echo '<a class="btn btn-dark mb-3 createNewUserBtn" href="create-user.php" role="button"> + Create New User </a>';
+            echo '</div>';
+        }
+        ?>
 
-                        <div class="col-md-3 d-flex align-items-center justify-content-end">
-                            <label class="my-auto me-2">Show</label>
-                            <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2" style="width: 70px">
-                                <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
-                                <option value="15" <?php echo $recordsPerPage == 15 ? 'selected' : ''; ?>>15</option>
-                                <option value="20" <?php echo $recordsPerPage == 20 ? 'selected' : ''; ?>>20</option>
-                            </select>
-                            <label>entries</label>
-                        </div>
+        <div class="container p-2 shadow-lg rounded-2 bg-light mb-5">
+            <div class="container mb-4">
+                <div class="row mt-4 mb-4">
+                    <div class="col-md-6 col-sm-6">
+                        <form method="GET" action="allocate.php">
+                            <div class="d-flex align-items-center">
+                                <input type="search" name="search_query" class="form-control me-2 test" placeholder="Search users" value="<?php echo htmlspecialchars($search_query); ?>">
+                                <button type="submit" class="btn signature-btn search">Search</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-md-6 col-sm-6 d-flex align-items-center justify-content-center justify-content-sm-end mt-2 mt-sm-0 pagepagination">
+                        <label class="test my-auto me-2">Show</label>
+                        <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2" style="width: 70px">
+                            <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                            <option value="15" <?php echo $recordsPerPage == 15 ? 'selected' : ''; ?>>15</option>
+                            <option value="20" <?php echo $recordsPerPage == 20 ? 'selected' : ''; ?>>20</option>
+                        </select>
+                        <label>entries</label>
                     </div>
                 </div>
 
-                <?php
-                if ($usersResult && $usersResult->num_rows > 0) {
-                    echo '<div class="container table-responsive">';
-                    echo '<table class="table table-hover table-striped mb-4 border">';
-                    echo '<thead>';
-                    echo '<tr class="text-center">';
-                    echo '<th class="border">Employee ID</th>';
-                    echo '<th class="border">Username</th>';
-                    echo '<th class="border">Full Name</th>';
-                    echo '<th class="border">Department</th>';
-                    echo '<th class="border">Role</th>';
-                    echo '<th class="border">Status</th>';
-                    echo '<th class="border">Action</th>';
-                    echo '</tr>';
-                    echo '</thead>';
-                    echo '<tbody>';
+            </div>
 
-                    while ($user = $usersResult->fetch_assoc()) {
-                        $employee_id = $user['employee_id'];
-                        $username = $user['username'];
-                        $full_name = $user['full_name'];
-                        $department = $user['department_name'];
-                        $roleTable = $user['role'];
-                        $capitaliseRole = ucwords($roleTable);
+            <?php
+            if ($usersResult && $usersResult->num_rows > 0) {
+                echo '<div class="container table-responsive">';
+                echo '<table class="table table-hover table-striped mb-4 border">';
+                echo '<thead class="align-middle">';
+                echo '<tr class="text-center">';
+                echo '<th class="border">Employee ID</th>';
+                echo '<th class="border">Username</th>';
+                echo '<th class="border">Full Name</th>';
+                echo '<th class="border">Department</th>';
+                echo '<th class="border">Role</th>';
+                echo '<th class="border">Status</th>';
+                echo '<th class="border action-column">Action</th>';
+                echo '</tr>';
+                echo '</thead>';
+                echo '<tbody>';
 
-                        // Print the user details in a table row
-                        echo '<tr class="text-center align-middle">';
-                        echo "<td>$employee_id</td>";
-                        echo "<td>$username</td>";
-                        echo "<td>$full_name</td>";
-                        echo "<td>$department</td>";
-                        echo "<td>$capitaliseRole</td>";
-                        echo '<td>  
+                while ($user = $usersResult->fetch_assoc()) {
+                    $employee_id = $user['employee_id'];
+                    $username = $user['username'];
+                    $full_name = $user['full_name'];
+                    $department = $user['department_name'];
+                    $roleTable = $user['role'];
+                    $capitaliseRole = ucwords($roleTable);
+
+                    // Print the user details in a table row
+                    echo '<tr class="text-center align-middle">';
+                    echo "<td>$employee_id</td>";
+                    echo "<td>$username</td>";
+                    echo "<td>$full_name</td>";
+                    echo "<td>$department</td>";
+                    echo "<td>$capitaliseRole</td>";
+                    echo '<td>  
                                 <div class="d-flex align-items-center justify-content-center">';
-                        if ($user['is_active'] == '1') {
-                            echo '<span class="badge badge-pill bg-success rounded-pill">Active</span>';
-                        } else {
-                            echo '<span class="badge badge-pill bg-danger rounded-pill">Not Active</span>';
-                        }
-                        echo '</div> </td>';
-                        echo '<td>';
-                        if ($role === 'admin') {
-                            echo ' <a href="edit-user.php?employee_id=' . $employee_id . '"><i class="fa-regular fa-pen-to-square signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Edit User"></i></a>';
-                        }
+                    if ($user['is_active'] == '1') {
+                        echo '<span class="badge badge-pill bg-success rounded-pill">Active</span>';
+                    } else {
+                        echo '<span class="badge badge-pill bg-danger rounded-pill">Not Active</span>';
+                    }
+                    echo '</div> </td>';
+                    echo '<td class="no-wrap">';
+                    if ($role === 'admin') {
+                        echo ' <a href="edit-user.php?employee_id=' . $employee_id . '"><i class="fa-regular fa-pen-to-square signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Edit User"></i></a>';
+                    }
 
-                        echo '<a href="allocate-more.php?employee_id=' . $employee_id . '"><i class="fa-solid fa-list-check signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Allocate Module"></i></a>
+                    echo '<a href="allocate-more.php?employee_id=' . $employee_id . '"><i class="fa-solid fa-list-check signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Allocate Module"></i></a>
                                 <a href="manage-license.php?employee_id=' . $employee_id . '"><i class="fa-regular fa-id-card signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Manage License"></i></a>';
 
-                        if ($role === 'admin') {
-                            if ($user['is_active'] == '1') {
-                                echo '<a href="allocate.php?deactivate=true&employee_id=' . $employee_id . '&page=' . $pageNumber . '" style="text-decoration:none">
+                    if ($role === 'admin') {
+                        if ($user['is_active'] == '1') {
+                            echo '<a href="allocate.php?deactivate=true&employee_id=' . $employee_id . '&page=' . $pageNumber . '" style="text-decoration:none">
                                             <i class="text-danger fa-solid fa-user-slash m-2 tooltips"
                                             data-toggle="tooltip" data-placement="top" title="Deactivate User">
                                             </i>
                                           </a>';
-                            } else {
-                                echo '<a href="allocate.php?activate=true&employee_id=' . $employee_id . '&page=' . $pageNumber . '" style="text-decoration:none">
+                        } else {
+                            echo '<a href="allocate.php?activate=true&employee_id=' . $employee_id . '&page=' . $pageNumber . '" style="text-decoration:none">
                                             <i class="text-success fa-solid fa-user-plus m-2 tooltips"
                                             data-toggle="tooltip" data-placement="top" title="Activate User">
                                             </i>
                                           </a>';
-                            }
                         }
-                        echo '</td>';
-                        echo '</tr>';
                     }
-                    echo '</tbody>';
-                    echo '</table>';
-
-                    // Pagination controls
-                    echo '<div class="d-flex justify-content-between align-items-center">';
-                    echo '<div class="d-flex">';
-                    if ($role === 'admin') {
-                        echo '<a class="btn btn-dark mb-3 createNewUserBtn" href="create-user.php" role="button"> + Create New User </a>';
-                    }
-                    echo '</div>';
-                    echo '<nav aria-label="Page navigation example">';
-                    echo '<ul class="pagination">';
-
-                    // Calculate the start and end page numbers for the limited pagination
-                    $startPage = max(1, $pageNumber - 1);
-                    $endPage = min($totalPages, $pageNumber + 1);
-
-                    // Previous page link
-                    if ($pageNumber > 1) {
-                        echo '<li class="page-item">';
-                        echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . ($pageNumber - 1) . '"><i class="fas fa-angle-double-left"></i></a>';
-                        echo '</li>';
-                    } else {
-                        echo '<li class="page-item disabled">';
-                        echo '<a class="page-link" href="#" tabindex="-1"><i class="fas fa-angle-double-left"></i></a>';
-                        echo '</li>';
-                    }
-
-                    // Page numbers
-                    for ($i = $startPage; $i <= $endPage; $i++) {
-                        echo '<li class="page-item';
-                        if ($i === $pageNumber) {
-                            echo ' active';
-                        }
-                        echo '">';
-                        echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . $i . '">' . $i . '</a>';
-                        echo '</li>';
-                    }
-
-                    // Next page link
-                    if ($pageNumber < $totalPages) {
-                        echo '<li class="page-item">';
-                        echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . ($pageNumber + 1) . '"><i class="fas fa-angle-double-right"></i></a>';
-                        echo '</li>';
-                    } else {
-                        echo '<li class="page-item disabled">';
-                        echo '<a class="page-link" href="#" tabindex="-1"><i class="fas fa-angle-double-right"></i></a>';
-                        echo '</li>';
-                    }
-                    echo '</ul>';
-                    echo '</nav>';
-                    echo '</div>';
-                    echo '</div>';
-                } else {
-                    echo '<div class="container text-center mt-5 mb-5">';
-                    echo "<h3><strong> No users found. <h3></strong>";
-                    echo '</div>';
-                    echo '<div class="d-flex justify-content-center">';
-                    echo '<a class="btn btn-dark mb-3" href="create-user.php" role="button"> + Create New User </a>';
-                    echo '</div>';
-                    echo '</div>';
+                    echo '</td>';
+                    echo '</tr>';
                 }
-                ?>
-            </div>
+                echo '</tbody>';
+                echo '</table>';
+            } else {
+                echo '<div class="container text-center mt-5 mb-5">';
+                echo "<h3><strong> No users found. <h3></strong>";
+                echo '</div>';
+                echo '<div class="d-flex justify-content-center">';
+                echo '<a class="btn btn-dark mb-3 createNewUserBtn" href="create-user.php" role="button"> + Create New User </a>';
+                echo '</div>';
+                echo '</div>';
+            }
+            ?>
         </div>
-        <div class="text-center mt-3">
-            <a class="btn btn-dark" href="index.php" role="button">Back to Home</a>
-        </div>
+        <?php
+        // Pagination controls
+        echo '<div class="d-flex justify-content-center align-items-center">';
+        echo '<nav aria-label="Page navigation example">';
+        echo '<ul class="pagination">';
+
+        // Calculate the start and end page numbers for the limited pagination
+        $startPage = max(1, $pageNumber - 1);
+        $endPage = min($totalPages, $pageNumber + 1);
+
+        // Previous page link
+        if ($pageNumber > 1) {
+            echo '<li class="page-item">';
+            echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . ($pageNumber - 1) . '"><i class="fas fa-angle-double-left"></i></a>';
+            echo '</li>';
+        } else {
+            echo '<li class="page-item disabled">';
+            echo '<a class="page-link" href="#" tabindex="-1"><i class="fas fa-angle-double-left"></i></a>';
+            echo '</li>';
+        }
+
+        // Page numbers
+        for ($i = $startPage; $i <= $endPage; $i++) {
+            echo '<li class="page-item';
+            if ($i === $pageNumber) {
+                echo ' active';
+            }
+            echo '">';
+            echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . $i . '">' . $i . '</a>';
+            echo '</li>';
+        }
+
+        // Next page link
+        if ($pageNumber < $totalPages) {
+            echo '<li class="page-item">';
+            echo '<a class="page-link signature-color" href="?search_query=' . urlencode($search_query) . '&recordsPerPage=' . $recordsPerPage . '&page=' . ($pageNumber + 1) . '"><i class="fas fa-angle-double-right"></i></a>';
+            echo '</li>';
+        } else {
+            echo '<li class="page-item disabled">';
+            echo '<a class="page-link" href="#" tabindex="-1"><i class="fas fa-angle-double-right"></i></a>';
+            echo '</li>';
+        }
+        echo '</ul>';
+        echo '</nav>';
+        echo '</div>';
+        echo '</div>';
+        ?>
+    </div>
     </div>
 
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================================== -->
-
-    <div class="mt-5"></div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php"); ?>
 
     <!-- ================================================================================== -->
 

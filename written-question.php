@@ -57,7 +57,7 @@ if (isset($_POST['submitAnswers'])) {
                         $update_stmt->bind_param("sii", $answer, $row['written_question_id'], $employeeId);
                         if ($update_stmt->execute()) {
                             echo "Answer Updated Successfully";
-                            header("Location: modules.php");
+                            header("Location: index.php");
                         } else {
                             echo "Update Not Successful: " . $update_stmt->error;
                         }
@@ -73,7 +73,7 @@ if (isset($_POST['submitAnswers'])) {
                         $insert_stmt->bind_param("siii", $answer, $row['written_question_id'], $employeeId, $moduleId);
                         if ($insert_stmt->execute()) {
                             // echo "Answer Inserted Successfully";
-                            header("Location: modules.php");
+                            header("Location: index.php");
                         } else {
                             echo "Insert Not Successful: " . $insert_stmt->error;
                         }
@@ -153,7 +153,7 @@ if (isset($_POST['submitAnswers'])) {
                         <form method="POST">
                             <?php
                             $questionNumber = 1;
-                            echo "<h1 class='text-center'> Essay Quiz </h1>";
+                            echo "<h1 class='text-center'> <strong> Essay Quiz </strong> </h1>";
                             while ($row = $select_result->fetch_assoc()) {
                                 echo "<p class='card-title mt-5'> Question $questionNumber: </p>";
                                 // echo "<p class='card-text'> Question Id: " . $row['written_question_id'] . "</p>";

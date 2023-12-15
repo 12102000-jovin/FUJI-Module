@@ -59,10 +59,11 @@ $checkMarkingResult = $conn->query($checkMarkingSql);
 
     <?php require_once("nav-bar.php"); ?>
 
-    <div class="container-fluid mt-5 mb-4 text-light">
-        <a href="index.php" style="text-decoration: none" class="text-light"><i class="fa-solid fa-arrow-left"></i>
-            Back to Home</a>
-        <h1 class="text-center mt-4">Essay Question Marking List</h1>
+    <div class="container mb-4 text-light">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
+        <h1 class="text-center mt-4"><strong>Essay Question Marking List</strong></h1>
     </div>
 
     <div class="container mt-2 mb-5">

@@ -92,22 +92,42 @@ if (isset($_POST['delete_question_id'])) {
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Edit Questions</title>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+<style>
+    @media (max-width: 576px) {
+        h5 {
+            font-size: 18px;
+        }
+
+        p,
+        li,
+        .editBtn,
+        .deleteBtn {
+            font-size: 12px;
+        }
+    }
+</style>
 
 <!-- ================================================================================== -->
 
-<body class=" bg-gradient signature-bg-color d-flex flex-column min-vh-100">
+<body class=" bg-gradient d-flex flex-column min-vh-100">
 
     <?php require_once("nav-bar.php"); ?>
 
     <!-- ================================================================================== -->
 
-    <div class="container text-white">
-        <h1 class="mt-5 text-center" id="stepText">Edit Questions</h1>
+    <div class="container">
+        <h1 class="mt-5 text-center" id="stepText">
+            <div class="d-flex justify-content-start mt-5">
+                <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+            </div>
+            <strong>Edit Questions</strong>
+        </h1>
         <p class="text-center">Total Questions in <u><strong><?php echo $moduleName ?> Module</strong></u>: <strong><?php echo mysqli_num_rows($result); ?></strong></p>
         <div class="d-flex justify-content-center">
             <a class="btn btn-dark" href="create-question.php?moduleId=<?php echo $moduleId; ?>&moduleName=<?php echo urlencode($moduleName); ?>" role="button">Create Questions</a>
@@ -149,8 +169,8 @@ if (isset($_POST['delete_question_id'])) {
                                 </ul>
                                 <p class="card-text"><strong>Correct Answer: </strong><?php echo $correctAnswer; ?></p>
                                 <div class="d-flex justify-content-end">
-                                    <button type="button" class="btn signature-btn m-1" onclick="window.location.href='edit-questions-more.php?questions_id=<?php echo $questionId; ?>&module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">Edit Question</button>
-                                    <a href="<?php echo $_SERVER['PHP_SELF'] . '?module_id=' . $moduleId . '&delete_question_id=' . $questionId; ?>" class="btn btn-danger m-1" style="text-decoration: none;" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal-<?php echo $questionId; ?>">Delete</a>
+                                    <button type="button" class="btn signature-btn m-1 editBtn" onclick="window.location.href='edit-questions-more.php?questions_id=<?php echo $questionId; ?>&module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">Edit Question</button>
+                                    <a href="<?php echo $_SERVER['PHP_SELF'] . '?module_id=' . $moduleId . '&delete_question_id=' . $questionId; ?>" class="btn btn-danger m-1 deleteBtn" style="text-decoration: none;" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal-<?php echo $questionId; ?>">Delete</a>
                                 </div>
                             </div>
                         </div>
@@ -182,14 +202,6 @@ if (isset($_POST['delete_question_id'])) {
                 }
             }
             ?>
-        </div>
-    </div>
-
-    <!-- ================================================================================== -->
-
-    <div class="container mt-auto mb-4">
-        <div class="text-center">
-            <a class="btn btn-secondary" href="modules.php" role="button">Back to modules</a>
         </div>
     </div>
 
@@ -258,32 +270,7 @@ if (isset($_POST['delete_question_id'])) {
             </div>
         </div>
     </div>
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold text-black" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

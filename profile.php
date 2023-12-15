@@ -105,6 +105,10 @@ $licenseQueryResult = $conn->query($licenseQuery);
     <title> Profile </title>
 </head>
 <style>
+    .card {
+        border: none;
+    }
+
     .profile-container {
         width: 15vh;
         /* Set the desired width */
@@ -134,7 +138,7 @@ $licenseQueryResult = $conn->query($licenseQuery);
 </style>
 <!-- ==================================================================================  -->
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100 signature-bg-color">
 
     <?php require_once("nav-bar.php"); ?>
 
@@ -143,6 +147,12 @@ $licenseQueryResult = $conn->query($licenseQuery);
     <div class="container">
         <div class="container">
             <div class="mt-5 mb-5">
+                <div class="d-flex justify-content-start mt-5">
+                    <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+                </div>
+                <div class="d-flex justify-content-center mb-3">
+                    <h1 class="text-white"><strong>Profile</strong></h1>
+                </div>
                 <div class="row d-flex justify-content-center">
                     <div class="card col-md-4 m-1 shadow">
                         <div class="card-body">
@@ -198,7 +208,7 @@ $licenseQueryResult = $conn->query($licenseQuery);
 
                     <div class="card col-md-7 m-1 shadow">
                         <div class="card-body">
-                            <h2>History</h2>
+                            <h2 class="text-center">History</h2>
                             <div class="d-flex justify-content-center">
                                 <div class="row">
                                     <?php
@@ -219,7 +229,7 @@ $licenseQueryResult = $conn->query($licenseQuery);
                                             $highestScores[$module_id] = $module_score;
                                     ?>
                                             <!-- Displaying each module in a card -->
-                                            <div class="card mb-3">
+                                            <div class="card mb-3 border border-dark p-4">
                                                 <div class="row g-0">
                                                     <div class="col-md-4 p-2 align-self-center text-center">
                                                         <img src="<?php echo $module_image; ?>" alt="<?php echo $module_name; ?>" class="img-fluid" style="max-height: 100px; object-fit: contain;">
@@ -239,7 +249,7 @@ $licenseQueryResult = $conn->query($licenseQuery);
                                         }
                                     } else {
                                         echo "<div class='container'>";
-                                        echo "<h4 class='mt-5'>No attempted modules found.</h4>";
+                                        echo "<p class='alert alert-danger mt-5'>No attempted modules found.</p>";
                                         echo "</div>";
                                     }
                                     ?>
@@ -252,37 +262,9 @@ $licenseQueryResult = $conn->query($licenseQuery);
         </div>
     </div>
 
-    <div class="d-flex justify-content-center mb-5">
-        <button class="btn btn-dark" onclick="window.history.back()">Back</button>
-    </div>
-
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

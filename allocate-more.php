@@ -141,35 +141,25 @@ $conn->close();
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <!-- Internal CSS for the HTML -->
     <style>
-        .table thead th {
-            background-color: #043f9d;
-            color: white;
-            border: 1px solid #043f9d !important;
-        }
-
         /* Add custom CSS styles here */
         @media (max-width: 576px) {
-
-            /* Adjust table styles for small screens */
-            table {
-                font-size: 10px;
-            }
-
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .navbar-nav {
-                flex-direction: column;
-            }
-
-            .nav-link {
-                padding: 0.5rem;
-            }
-
-            .pagination .page-item .page-link {
+            .pagepagination label {
                 font-size: 12px;
+            }
+
+            .form-select {
+                font-size: 12px;
+                width: 65px !important;
+            }
+
+            .search {
+                font-size: 12px;
+                padding: 9px;
+                margin-top: 4px;
+            }
+
+            .module-image {
+                width: 4rem;
             }
         }
 
@@ -206,26 +196,29 @@ $conn->close();
     <!-- ================================================================================== -->
 
     <!-- Title -->
-    <div class="container mt-5">
+    <div class="container">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
         <h1 class="text-center"><strong> Module Allocation </strong></h1>
         <?php
         // Count the number of allocated modules
         $allocated_module_count = $allocatedResult->num_rows;
         ?>
         <h6 class="text-center">Employee: <u><strong><?php echo $full_name ?></strong></u></h6>
-        <h6 class="text-center">Module Allocated to this user: <span id="allocatedModuleCount"><?php echo $allocated_module_count; ?></span></h6>
+        <h6 class="text-center">Module Allocated to this user: <span id="allocatedModuleCount"><strong><?php echo $allocated_module_count; ?></strong></span></h6>
     </div>
 
     <!-- ================================================================================== -->
 
     <!-- Table  -->
-    <div class="container mt-4">
+    <div class="container mt-4 mb-5">
         <div class="p-4 bg-light rounded-3 shadow-lg">
             <div class="d-flex justify-content-center">
                 <div class="col-12">
-                    <form method="GET" class="d-flex justify-content-end search-form">
+                    <form method="GET" class="d-flex align-items-center justify-content-end search-form">
                         <input type="search" id="search_query" class="form-control me-2" placeholder="Search modules" value="<?php echo htmlspecialchars($search_query); ?>">
-                        <button type="submit" class="btn signature-btn">Search</button>
+                        <button type="submit" class="btn signature-btn search">Search</button>
                     </form>
                 </div>
             </div>
@@ -300,7 +293,7 @@ $conn->close();
                     </tbody>
                 </table>
 
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center pagepagination">
                     <div class="d-flex">
                         <label class="my-auto me-2"> Show </label>
                         <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2 " style="width: 70px">
@@ -375,13 +368,6 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <!-- Back button  -->
-    <div class="text-center mt-3 mb-5">
-        <a class="btn btn-dark" href="allocate.php" role="button">Back</a>
-    </div>
-
-    <!-- ================================================================================== -->
-
     <!-- Success Modal -->
     <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -426,33 +412,7 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================================== -->
-
-    <!-- Footer -->
-    <footer class="bg-light text-center py-4 mt-auto shadow">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <!-- ================================================================================== -->
 

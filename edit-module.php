@@ -117,6 +117,7 @@ $conn->close();
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Edit Module</title>
 </head>
@@ -128,9 +129,12 @@ $conn->close();
     <!-- ==================================================================================  -->
 
     <div class="wrapper d-flex flex-column justify-content-center align-items-center mb-5" style="min-height: calc(100vh - 170px)">
-        <div class="container mt-4">
+        <div class="container">
+            <div class="d-flex justify-content-start mt-5">
+                <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+            </div>
             <div class="text-center">
-                <h1>Edit Modules</h1>
+                <h1 class="mb-3"><strong>Edit Module</strong></h1>
             </div>
 
             <?php
@@ -193,7 +197,6 @@ $conn->close();
                     <!-- Confirmation popup message -->
                     <!-- Button HTML (to Trigger Modal) -->
                     <div class="text-center">
-                        <a class="btn btn-secondary m-1" href="modules.php" role="button">Back</a>
                         <a href="#myModal" role="button" class="btn btn-dark" id="editModuleBtn">Update Module</a>
                     </div>
 
@@ -223,31 +226,7 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center text-black py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <!-- ================================================================================== -->
 

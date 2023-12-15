@@ -92,9 +92,9 @@ $conn->close();
 
     <div class="container mb-5">
         <div class="d-flex justify-content-center" style="margin-top: 3vh">
-            <a class="btn btn-secondary m-1" href="modules.php" role="button">Back</a>
+            <a class="btn btn-secondary btn-lg back-btn m-1" href="javascript:history.go(-1)" role="button">Back</a>
             <div class="dropdown">
-                <button class="btn signature-btn dropdown-toggle m-1 shadow" type="button" id="startDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn signature-btn btn-lg dropdown-toggle m-1 shadow" type="button" id="startDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     Start
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="startDropdown">
@@ -107,33 +107,7 @@ $conn->close();
 
     <div class="mt-5"></div>
 
-    <!-- ==================================================================================  -->
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php"); ?>
 
     <!-- ================================================================================== -->
 

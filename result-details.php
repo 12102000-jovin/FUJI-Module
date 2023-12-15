@@ -68,6 +68,7 @@ $conn->close();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <title>Result Details</title>
 </head>
 
@@ -103,19 +104,22 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <div class="container text-center mt-5">
-        <h1>Result Details</h1>
+    <div class="container text-center mb-3">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
+        <h1><strong>Result Details</strong></h1>
     </div>
+
 
     <!-- ================================================================================== -->
 
     <div class="container">
-        <div class="text-white mt-5 p-5 rounded-3 bg-gradient signature-bg-color shadow-lg">
+        <div class="text-white p-5 rounded-3 bg-gradient signature-bg-color shadow-lg">
             <?php
             foreach ($userAnswers as $userAnswer) {
                 echo "<div class='question-answer'>";
-                echo "<h4>Question ID: " . $userAnswer['question_id'] . "</h4>";
-                echo "<p>Question: " . $userAnswer['question'] . "</p>";
+                echo "<h4 class='mb-3'>Question: " . $userAnswer['question'] . "</h4>";
 
                 // Display options
                 echo "<table class='table table-bordered table-responsive'>";
@@ -161,39 +165,14 @@ $conn->close();
             }
             ?>
         </div>
-        <div class="text-center mt-5 mb-5">
-            <button class="btn btn-secondary shadow" onclick="window.print()">Print</button>
-            <a href="report.php" class="btn btn-dark shadow">Back to Reports</a>
+        <div class="text-center mt-3 mb-5">
+            <button class="btn btn-secondary shadow" onclick="window.print()"><i class="fa-solid fa-print"> </i> Print</button>
         </div>
     </div>
 
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php"); ?>
 
     <!-- ================================================================================== -->
 

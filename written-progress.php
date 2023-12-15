@@ -59,10 +59,11 @@ $selectModuleResult = $conn->query($selectModuleSql);
 <body class="d-flex flex-column min-vh-100 signature-bg-color">
     <?php require_once("nav-bar.php"); ?>
 
-    <div class="container-fluid mt-5 mb-4 text-light">
-        <a href="index.php" style="text-decoration: none" class="text-light"><i class="fa-solid fa-arrow-left"></i>
-            Back to Home</a>
-        <h1 class="text-center mt-4">Your Essay Progress</h1>
+    <div class="container mt-5 mb-4 text-light">
+        <div class="d-flex justify-content-start">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
+        <h1 class="text-center "><strong>Your Essay Progress</strong></h1>
     </div>
 
     <!-- Content Section -->
@@ -91,13 +92,7 @@ $selectModuleResult = $conn->query($selectModuleSql);
             ?>
         </div>
     </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

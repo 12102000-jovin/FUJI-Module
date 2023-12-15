@@ -140,28 +140,35 @@ if (isset($_GET['delete_license'])) {
 
     <!-- License Data Table -->
     <div class="container">
-        <div class="mb-3">
-            <div class="text-center mb-5 mt-5">
-                <h1><strong>All Licenses</strong></h1>
-            </div>
-            <div class="p-4 bg-light rounded-3 shadow-lg">
-                <table class="table table-striped table-hover border">
-                    <thead class="text-center">
-                        <tr>
-                            <th>License Id</th>
-                            <th>License Name</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-center">
-                        <?php
-                        if ($select_license_result->num_rows > 0) {
-                            // Output data of each row
-                            while ($row = $select_license_result->fetch_assoc()) {
-                                echo "<tr>";
-                                echo "<td style='width: 16vw'>" . $row["license_id"] . "</td>";
-                                echo "<td>" . $row["license_name"] . "</td>";
-                                echo '<td> 
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
+        <div class="text-center mb-4">
+            <h1><strong>All Licenses</strong></h1>
+        </div>
+        <div class="d-flex justify-content-center mb-3">
+            <a type="button" class="btn btn-dark" href="#" data-bs-toggle="modal" data-bs-target="#addLicenseModal" role="button">
+                + Add License
+            </a>
+        </div>
+        <div class="p-4 bg-light rounded-3 shadow-lg">
+            <table class="table table-striped table-hover border">
+                <thead class="text-center">
+                    <tr>
+                        <th>License Id</th>
+                        <th>License Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    <?php
+                    if ($select_license_result->num_rows > 0) {
+                        // Output data of each row
+                        while ($row = $select_license_result->fetch_assoc()) {
+                            echo "<tr>";
+                            echo "<td style='width: 16vw'>" . $row["license_id"] . "</td>";
+                            echo "<td>" . $row["license_name"] . "</td>";
+                            echo '<td> 
                                         <a data-license-name="' . $row["license_name"] . '" data-license-id="' . $row["license_id"] . '"> 
                                             <i class="signature-color fa-regular fa-pen-to-square tooltips m-1" data-bs-toggle="modal" data-bs-target="#editLicenseModal" data-toggle="tooltip" data-placement="top" title="Edit License"></i>
                                         </a> 
@@ -169,24 +176,15 @@ if (isset($_GET['delete_license'])) {
                                         <i class="text-danger fa-regular fa-trash-can tooltips m-1" data-toggle="tooltip" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal" data-placement="top" title="Delete License"></i>
                                     </a>
                                     </td>';
-                                echo "</tr>";
-                            }
-                        } else {
-                            echo "<tr><td colspan='3'>No data found</td></tr>";
+                            echo "</tr>";
                         }
-                        ?>
-                    </tbody>
-                </table>
-
-                <a type="button" class="btn btn-dark" href="#" data-bs-toggle="modal" data-bs-target="#addLicenseModal" role="button">
-                    + Add License
-                </a>
-            </div>
+                    } else {
+                        echo "<tr><td colspan='3'>No data found</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
         </div>
-    </div>
-
-    <div class="d-flex justify-content-center">
-        <a class="btn btn-dark" href="index.php">Back</a>
     </div>
 
     <!-- Add License Modal -->
@@ -238,25 +236,6 @@ if (isset($_GET['delete_license'])) {
         </div>
     </div>
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Delete confirmation modal -->
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -277,6 +256,8 @@ if (isset($_GET['delete_license'])) {
             </div>
         </div>
     </div>
+
+    <?php require_once("footer_logout.php"); ?>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -327,13 +308,5 @@ if (isset($_GET['delete_license'])) {
         })
     </script>
 </body>
-
-
-<!-- Footer Section -->
-<footer class="bg-light text-center py-4 mt-auto shadow">
-    <div class="container">
-        <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-    </div>
-</footer>
 
 </html>

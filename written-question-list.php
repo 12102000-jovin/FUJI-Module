@@ -200,6 +200,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
             .badge {
                 font-size: 10px !important;
             }
+
+            .form-select {
+                width: 50px !important;
+                padding: 5px;
+                font-size: 12px;
+            }
+
+            label {
+                font-size: 12px;
+            }
+
+            .searchBtn {
+                font-size: 12px;
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
         }
 
         .pagination .page-item.active .page-link {
@@ -224,21 +240,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
 
 <body class="d-flex flex-column min-vh-100">
     <?php require_once("nav-bar.php"); ?>
+
+    <div class="container">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
+
+        <h1 class="text-center"><strong>Essay Question Marking List</strong></h1>
+    </div>
+
     <div class="container d-flex justify-content-center">
         <div class="row justify-content-center">
             <div class="col-md-12">
-                <div class="card mt-5 mb-5 p-3">
-
+                <div class="card mt-3 mb-5 p-3" style="border: none">
                     <div class="card-body">
-                        <h1 class="text-center">Essay Question Marking List</h1>
                         <form method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
                             <input type="hidden" name="module_id" value="<?php echo htmlspecialchars($module_id); ?>">
                             <div class="d-flex justify-content-between aling-items-center">
-                                <div class="d-flex align-items-center col-md-8 mt-5">
-                                    <input class="form-control mr-sm-2" type="search" name="select_query" placeholder="Search" aria-label="Search" style="height: 38px;">
-                                    <button class="btn btn-dark mx-2 my-2 my-sm-0" type="submit">Search</button>
+                                <div class="d-flex align-items-center col-md-8">
+                                    <input class="form-control mr-sm-2 searchBtn" type="search" name="select_query" placeholder="Search" aria-label="Search" style="height: 38px;">
+                                    <button class="btn btn-dark mx-2 my-2 my-sm-0 searchBtn" type="submit">Search</button>
                                 </div>
-                                <div class="col-md-3 d-flex align-items-center mt-5 justify-content-end">
+                                <div class="col-md-3 d-flex align-items-center justify-content-end">
                                     <label class="my-auto me-2">Show</label>
                                     <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2" style="width: 70px">
                                         <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
@@ -363,31 +386,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
         </div>
     </div>
 
-    <!-- Footer Section -->
-    <footer class=" bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php require_once("footer_logout.php") ?>
 
     <!-- Written Answer Modal -->
     <div class="modal fade" id="writtenAnswerModal" tabindex="-1" aria-labelledby="writtenAnswerModal" aria-hidden="true">

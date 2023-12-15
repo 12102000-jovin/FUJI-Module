@@ -164,6 +164,26 @@ $conn->close();
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
+
+            .form-control {
+                width: 150px;
+            }
+
+            .searchBtn {
+                font-size: 12px;
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+
+            label {
+                font-size: 12px;
+            }
+
+            .form-select {
+                width: 50px !important;
+                padding: 5px;
+                font-size: 12px;
+            }
         }
 
         .table thead th {
@@ -194,40 +214,43 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <div class="container text-center mt-5">
+    <div class="container text-center ">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
         <h1><strong> Report </strong></h1>
     </div>
 
-    <div class="container mt-5">
+    <div class="container mt-3">
         <div class="rounded-3 p-5 bg-light shadow-lg">
             <form class="form-inline" method="GET" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-                <div class="row align-items-center">
-                    <div class="col-md-9">
-                        <div class="input-group mb-3 mt-3">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="input-group mb-3 mt-3 d-flex justify-content-center">
                             <div class="input-group-prepend">
                                 <button class="btn signature-btn tooltips" type="button" id="toggleButton" data-bs-toggle="tooltip" data-bs-placement="top" title="Search by Date">
                                     <i class="fas fa-calendar"></i>
                                 </button>
                             </div>
-                            <div class="col-md-8 form-group" id="filterGroup">
+                            <div class="col-md-9 form-group" id="filterGroup">
                                 <input type="search" class="form-control" id="filterInput" name="searchTerm" placeholder="Search (Module/Name/Result)">
                             </div>
-                            <div class="col-md-8 form-group" id="dateGroup" style="display: none;">
+                            <div class="col-md-9 form-group" id="dateGroup" style="display: none;">
                                 <input type="date" class="form-control" id="dateInput" name="date">
                             </div>
                             <div class="col-md-2 d-flex align-items-center">
-                                <button type="submit" class="btn signature-btn" style="margin-left: 10px;">Search</button>
+                                <button type="submit" class="btn signature-btn searchBtn" style="margin-left: 10px;">Search</button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 d-flex align-items-center justify-content-end">
-                        <label class="my-auto me-2">Show</label>
+                    <div class="col-md-12 d-flex align-items-center justify-content-center">
+                        <label class="my-auto me-2"><strong>Show</strong></label>
                         <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2" style="width: 70px">
                             <option value="5" <?php echo $recordsPerPage == 5 ? 'selected' : ''; ?>>5</option>
                             <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
                             <option value="15" <?php echo $recordsPerPage == 15 ? 'selected' : ''; ?>>15</option>
                         </select>
-                        <label>entries</label>
+                        <label><strong>entries</strong></label>
                     </div>
                 </div>
             </form>
@@ -286,7 +309,7 @@ $conn->close();
             </div>
 
             <div class="mt-5 text-center">
-                <h6>User Attempt History</h6>
+                <h6><strong>User Attempt History</strong></h6>
             </div>
 
             <div class="table-responsive">
@@ -319,7 +342,7 @@ $conn->close();
             </div>
 
             <div class="d-flex justify-content-end">
-                <button class="btn btn-secondary m-1 mb-2" onclick="window.print()">Print</button>
+                <button class="btn btn-secondary m-1 mb-2" onclick="window.print()"> <i class="fa-solid fa-print"></i> Print</button>
                 <button class="btn signature-btn m-1 mb-2" onclick="exportTriesToCSV()">Export to CSV</button>
             </div>
 
@@ -384,10 +407,6 @@ $conn->close();
         </div>
     </div>
 
-    <div class="d-flex justify-content-center mt-3">
-        <a href="index.php" class="btn btn-dark"> Back to Home </a>
-    </div>
-
     <!-- ================================================================================== -->
 
     <!-- Result Modal -->
@@ -426,35 +445,10 @@ $conn->close();
         </div>
     </div>
 
+    <div class="mt-5"></div>
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-5"></div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto ">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <!-- ================================================================================== -->
 

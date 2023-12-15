@@ -163,8 +163,11 @@ $conn->close();
     <?php require_once("nav-bar.php"); ?>
 
     <div class="wrapper d-flex flex-column justify-content-center align-items-center">
-        <div class="container">
-            <h1 class="mt-5 text-center mb-5"><strong> Update User </strong></h1>
+        <div class="container mb-5">
+            <div class="d-flex justify-content-start mt-5">
+                <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+            </div>
+            <h1 class="text-center mb-3"><strong> Update User </strong></h1>
 
             <?php
             if (isset($_SESSION["userUpdated"]) && $_SESSION["userUpdated"]) {
@@ -246,7 +249,6 @@ $conn->close();
 
                     <!-- Submit buttons -->
                     <div class="text-center mt-3">
-                        <a class="btn btn-secondary" href="allocate.php" role="button">Back</a>
                         <a href="#myModal" role="button" id="updateUserBtn" class="btn btn-dark">Update User</a>
                     </div>
 
@@ -293,31 +295,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

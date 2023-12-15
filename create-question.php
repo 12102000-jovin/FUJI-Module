@@ -102,9 +102,24 @@ $conn->close();
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Create Question</title>
 </head>
+
+<style>
+    @media (max-width: 576px) {
+
+        label,
+        span {
+            font-size: 12px;
+        }
+
+        #createQuestionBtn {
+            font-size: 12px;
+        }
+    }
+</style>
 <!-- ==================================================================================  -->
 
 <body>
@@ -115,19 +130,22 @@ $conn->close();
 
     <div class="wrapper d-flex flex-column justify-content-center align-items-center" style="min-height: calc(100vh - 170px);">
         <div class="container">
-            <h1 class="mt-5 mb-5 text-center" id="stepText"><strong>Create Questions</strong></h1>
+            <div class="d-flex justify-content-start mt-5">
+                <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+            </div>
+            <h1 class="text-center" id="stepText"><strong>Create Questions</strong></h1>
         </div>
 
-        <div class="container">
+        <div class="container mb-5">
             <div class="p-5 text-white rounded-3 bg-gradient signature-bg-color shadow-lg">
                 <div class="row justify-content-center">
                     <div class="col">
                         <div id="formContainer">
                             <div class="form-block">
                                 <form id="moduleForm" method="post" class="needs-validation" novalidate>
-                                    <div class="form-group" id="questionContainer">
+                                    <div class="form-group mb-3" id="quesstionContainer">
                                         <label for="moduleQuestion" style="font-weight: bold;">Question</label>
-                                        <textarea class="form-control" rows="3" id="moduleQuestion" name="moduleQuestion[]" required></textarea>
+                                        <textarea class="form-control " rows="3" id="moduleQuestion" name="moduleQuestion[]" required></textarea>
                                         <div class="invalid-feedback text-info">
                                             Please provide a question.
                                         </div>
@@ -175,10 +193,10 @@ $conn->close();
                                                 <div class="text-center alert alert-info">
                                                     <?php if ($totalModules > 0) : ?>
                                                         <strong>
-                                                            <span><?php echo $totalModules; ?></span> Question(s) in <span><?php echo $moduleName ?> module</span>
+                                                            <span><?php echo $totalModules; ?> Question(s) in <?php echo $moduleName ?> module</span>
                                                         </strong>
                                                     <?php else : ?>
-                                                        <strong>No question in <span><?php echo $moduleName ?></span> module</strong>
+                                                        <span><strong>No question in <?php echo $moduleName ?> module</strong></span>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -187,7 +205,6 @@ $conn->close();
 
                                     <!-- Submit buttons -->
                                     <div class="text-center mt-3">
-                                        <a href="modules.php"><button type="button" class="btn btn-secondary">Back to Modules</button></a>
                                         <a href="#myModal" role="button" id="createQuestionBtn" class="btn btn-dark">Create Question</a>
                                     </div>
 
@@ -255,6 +272,7 @@ $conn->close();
         </div>
     </div>
 
+    <?php require_once("footer_logout.php") ?>
     <!-- ================================================================================== -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -322,32 +340,6 @@ $conn->close();
     </script>
 
     <!-- ==================================================================================  -->
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-5 shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
 
 </html>
 </body>

@@ -73,10 +73,9 @@ if (isset($_GET['module_id']) && isset($_GET['restore'])) {
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Archive</title>
-
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script>
         // Your JavaScript code here
         $(document).ready(function() {
@@ -109,11 +108,14 @@ if (isset($_GET['module_id']) && isset($_GET['restore'])) {
     <!-- ================================================================================== -->
 
     <div class="container mb-3">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
         <div class="row justify-content-center">
             <div class="col-md-8 text-center">
                 <!-- Search Form -->
                 <form class="form-inline mt-4" method="GET" action="archive.php">
-                    <div class="d-flex align-items-center shadow-lg">
+                    <div class="d-flex align-items-center">
                         <input class="form-control mr-sm-2" type="search" name="search" placeholder="Search" aria-label="Search" style="height: 38px;">
                         <button class="btn btn-outline-light mx-2 my-2 my-sm-0" type="submit">Search</button>
                     </div>
@@ -368,31 +370,7 @@ if (isset($_GET['module_id']) && isset($_GET['restore'])) {
     <div class="mt-5"></div>
     <!-- ================================================================================== -->
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
 
     <!-- ================================================================================== -->
 

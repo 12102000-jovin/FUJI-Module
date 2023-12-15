@@ -69,19 +69,13 @@ if ($result->num_rows > 0) {
 }
 
 
-$countSql = "SELECT
-    COUNT(*) AS question_count
-FROM
-    written_answers wa
-LEFT JOIN
-    written_results wr ON wa.written_answer_id = wr.written_answer_id
-LEFT JOIN
-    written_questions wq ON wa.written_question_id = wq.written_question_id
-WHERE
-    wa.module_id = $module_id
-    AND wr.written_answer_id IS NULL
-    AND wr.employee_id = $employee_id;
-";
+
+$countSql = "SELECT COUNT(DISTINCT wa.written_question_id) AS question_count
+FROM written_answers wa
+LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
+WHERE wa.employee_id = $employee_id 
+AND wa.module_id = $module_id      
+AND wr.written_result_id IS NULL";
 
 $countResult = $conn->query($countSql);
 
@@ -134,97 +128,77 @@ if ($countResult->num_rows > 0) {
 <body class="d-flex flex-column min-vh-100">
     <?php require_once("nav-bar.php"); ?>
 
-    <div class="container-fluid mt-5 mb-4 text-light">
-        <a href="written-progress.php" style="text-decoration: none" class="text-dark"><i class="fa-solid fa-arrow-left"></i>
-            Back to Progress</a>
-    </div>
-
     <div class="container">
-        <div class="d-flex justify-content-center">
-            <h1 class="mt-5"> Essay Quiz Progress </h1>
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
-        <div class="d-flex justify-content-center">
-            <p>Module: <strong> <?php echo $module_name ?> </strong></p>
+
+        <div class="d-flex justify-content-center mb-2">
+            <h1> <strong>Essay Quiz Progress</strong> </h1>
         </div>
-        <div class="d-flex justify-content-center mb-5">
+        <p class="text-center">Module: <strong> <?php echo $module_name ?> </strong></p>
+
+        <div class="d-flex justify-content-center mb-3">
             <p>Number of Unmarked Question: <strong> <?php echo $questionCount ?> </strong> <i class="fa-solid fa-circle-info text-danger tooltips" data-bs-placement="right" title="You need to ensure that the count of unmarked questions is 0. If it is not, the module still requires evaluation, and the current assessment may not represent the final result." ;></i></p>
         </div>
     </div>
 
-    <div class="container mb-5 p-4 bg-light rounded-3 shadow-lg table-border">
+    <div class="container">
         <div class="d-flex justify-content-center">
-            <?php
-            if ($selectResult->num_rows > 0) {
-            ?>
-                <table class="table table-striped table-hover table-bordered mt-2 text-center">
-                    <thead class="align-middle">
-                        <tr>
-                            <th>Question</th>
-                            <th>Employee Name</th>
-                            <th>Feedback</th>
-                            <th>Grader</th>
-                            <th>Graded At</th>
-                            <th>Result</th>
-                        </tr>
-                    </thead>
-                    <tbody class="align-middle">
-                        <?php
-                        while ($row = $selectResult->fetch_assoc()) {
-                        ?>
-                            <tr>
-                                <td><?php echo $row["question"] ?></td>
-                                <td><?php echo $row["employee_full_name"] ?></td>
-                                <td><?php echo $row["feedback"]; ?></td>
-                                <td><?php echo $row["grader_full_name"]; ?></td>
-                                <td><?php echo $row["graded_at"]; ?></td>
-                                <td>
-                                    <?php
-                                    if ($row["is_correct"] === "0") {
-                                        echo "<span class='badge rounded-pill text-bg-danger' style='font-size:16px'>False</span>";
-                                    } else if ($row['is_correct'] === "1") {
-                                        echo "<span class='badge rounded-pill text-bg-success' style='font-size:16px'>True</span>";
-                                    }
-                                    ?>
-                                </td>
-                            </tr>
-                        <?php
-                        }
-                        ?>
-                    </tbody>
-                </table>
-            <?php
-            } else {
-                echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any essay quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
-            }
-            ?>
-        </div>
-    </div>
+            <div class="mb-5 p-4 bg-light rounded-3 shadow-lg table-border">
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to logout?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <a href="?logout=true" class="btn btn-danger">Logout</a>
-                </div>
+                <?php
+                if ($selectResult->num_rows > 0) {
+                ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered mt-2 text-center">
+                            <thead class="align-middle">
+                                <tr>
+                                    <th>Question</th>
+                                    <th>Employee Name</th>
+                                    <th>Feedback</th>
+                                    <th>Grader</th>
+                                    <th>Graded At</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody class="align-middle">
+                                <?php
+                                while ($row = $selectResult->fetch_assoc()) {
+                                ?>
+                                    <tr>
+                                        <td><?php echo $row["question"] ?></td>
+                                        <td><?php echo $row["employee_full_name"] ?></td>
+                                        <td><?php echo $row["feedback"]; ?></td>
+                                        <td><?php echo $row["grader_full_name"]; ?></td>
+                                        <td><?php echo $row["graded_at"]; ?></td>
+                                        <td>
+                                            <?php
+                                            if ($row["is_correct"] === "0") {
+                                                echo "<span class='badge rounded-pill text-bg-danger' style='font-size:16px'>False</span>";
+                                            } else if ($row['is_correct'] === "1") {
+                                                echo "<span class='badge rounded-pill text-bg-success' style='font-size:16px'>True</span>";
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    <?php
+                } else {
+                    echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any essay quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
+                }
+                    ?>
+                    </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer Section -->
-    <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-        <div class="container">
-            <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-        </div>
-    </footer>
+    <?php require_once("footer_logout.php") ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>

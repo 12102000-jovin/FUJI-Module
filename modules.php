@@ -73,6 +73,46 @@ $result->free();
     <title> Modules </title>
 </head>
 
+<style>
+    @media (max-width: 576px) {
+
+        label,
+        .createBtn,
+        .searchBtn {
+            font-size: 12px;
+        }
+
+        .searchBtn {
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        input {
+            height: 20px;
+        }
+
+        .no-wrap {
+            white-space: nowrap;
+        }
+
+        .form-select {
+            width: 50px !important;
+            padding: 5px;
+            font-size: 12px;
+        }
+
+        .createBtn {
+            margin-top: 20px !important;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .createBtn {
+            font-size: 12px;
+        }
+    }
+</style>
+
 <!-- ================================================================================== -->
 
 <body class="bg-gradient d-flex flex-column min-vh-100 signature-bg-color">
@@ -81,9 +121,10 @@ $result->free();
 
     <!-- ================================================================================== -->
 
-    <div class="container-fluid mt-5 mb-4 text-light">
-        <a href="index.php" style="text-decoration: none" class="text-light"><i class="fa-solid fa-arrow-left"></i>
-            Back to Home</a>
+    <div class="container">
+        <div class="d-flex justify-content-start mt-5">
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+        </div>
     </div>
 
     <?php
@@ -143,8 +184,8 @@ $result->free();
                     <div class="col-md-8 text-center">
                     <?php } ?>
                     <div class="d-flex align-items-center">
-                        <input class="form-control mr-2 mr-sm-2" type="search" name="search" placeholder="Search Module" aria-label="Search" style="height: 38px;">
-                        <button class="btn btn-outline-light mx-2 my-2 my-sm-0" type="submit">Search</button>
+                        <input class="form-control mr-2 mr-sm-2 searchBtn" type="search" name="search" placeholder="Search Module" aria-label="Search" style="height: 38px;">
+                        <button class="btn btn-outline-light mx-2 my-2 my-sm-0 searchBtn" type="submit">Search</button>
 
                         <!-- Show Entries -->
                         <div class="d-flex align-items-center justify-content-center" style="margin-left: 40px;">
@@ -160,8 +201,8 @@ $result->free();
 
                     </div>
                     <?php if ($role === 'admin' ||  $role === 'supervisor') { ?>
-                        <div class="col-md-2 text-md-end">
-                            <a href="create-module.php" class="btn mt-md-0 mt-2 text-white bg-dark CTA-btn">+ Create New Module</a>
+                        <div class="col-md-2 text-md-end d-flex justify-content-center">
+                            <a href="create-module.php" class="btn mt-md-0 mt-2 text-white bg-dark CTA-btn createBtn">+ Create New Module</a>
                         </div>
                     <?php }
                     ?>
@@ -359,32 +400,7 @@ $result->free();
 
                 <!-- ================================================================================== -->
 
-                <!-- Logout Modal -->
-                <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                Are you sure you want to logout?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <a href="?logout=true" class="btn btn-danger">Logout</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer Section -->
-                <footer class="bg-light text-center py-4 mt-auto shadow-lg">
-                    <div class="container">
-                        <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
-                    </div>
-                </footer>
-
+                <?php require_once("footer_logout.php") ?>
                 <!-- ================================================================================== -->
 
                 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
