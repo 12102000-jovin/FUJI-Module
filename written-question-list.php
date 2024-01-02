@@ -91,27 +91,93 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']) 
     $is_correct = isset($_POST['markQuestionToggle']) ? 1 : 0;
     $writtenAnswerId = $_POST['written-answer-id'];
 
-    $insert_query = "INSERT INTO written_results (feedback, employee_id, grader_id, graded_at, is_correct, written_answer_id, module_id) 
-                    VALUES (?, ?, ?, NOW(), ?, ?, ?)";
-    $stmt = $conn->prepare($insert_query);
-    $stmt->bind_param("siiiii", $feedback, $employeeId, $grader_id, $is_correct, $writtenAnswerId, $module_id);
+    // Check if an answer has already been marked
+    $check_query = "SELECT * FROM written_results WHERE written_answer_id = ? AND employee_id = ? AND module_id = ?";
+    $check_stmt = $conn->prepare($check_query);
 
-    if ($stmt->execute()) {
-        $update_mark_status = "UPDATE written_answers SET is_marked = 1 WHERE written_answer_id = ? ";
-        $update_mark_stmt = $conn->prepare($update_mark_status);
-        $update_mark_stmt->bind_param("i", $writtenAnswerId);
+    if ($check_stmt) {
+        $check_stmt->bind_param("iii", $writtenAnswerId, $employeeId, $module_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
 
-        if ($update_mark_stmt->execute()) {
-            // echo "status updated!";
+        if ($check_result->num_rows > 0) {
+            // If an answer has already been marked, then don't mark it again
+            $update_query = "UPDATE written_results SET feedback = ?, grader_id = ?, is_correct = ?, graded_at = NOW() WHERE written_answer_id = ? AND employee_id = ? AND module_id = ?";
+            $update_stmt = $conn->prepare($update_query);
+
+            if ($update_stmt) {
+                $update_stmt->bind_param("siiiii", $feedback, $grader_id, $is_correct, $writtenAnswerId, $employeeId, $module_id);
+
+                if ($update_stmt->execute()) {
+                    echo "Mark Updated Successfully";
+
+                    // Update status in written_answers table
+                    $update_mark_status = "UPDATE written_answers SET is_marked = 1 WHERE written_answer_id = ? ";
+                    $update_mark_stmt = $conn->prepare($update_mark_status);
+
+                    if ($update_mark_stmt) {
+                        $update_mark_stmt->bind_param("i", $writtenAnswerId);
+
+                        if ($update_mark_stmt->execute()) {
+                            echo "Status updated!";
+                        } else {
+                            echo "Error updating status after insertion: " . $update_mark_stmt->error;
+                        }
+
+                        // Redirect to the same page after updating
+                        header("Location: " . $_SERVER['REQUEST_URI']);
+                        exit();
+                    } else {
+                        echo "Error preparing status update statement: " . $conn->error;
+                    }
+                } else {
+                    echo "Update Not Successful: " . $update_stmt->error;
+                }
+
+                $update_stmt->close();
+            } else {
+                echo "Update Prepared statement failed: " . $conn->error;
+            }
         } else {
-            echo "Error updating status after insertion: " . $update_mark_stmt->error;
-        }
+            // Answer hasn't been marked, so insert a new record
+            $insert_query = "INSERT INTO written_results (feedback, employee_id, grader_id, graded_at, is_correct, written_answer_id, module_id) 
+            VALUES (?, ?, ?, NOW(), ?, ?, ?)";
+            $stmt = $conn->prepare($insert_query);
 
-        // Redirect to the same page after inserting
-        header("Location: " . $_SERVER['REQUEST_URI']);
-        exit();
-    } else {
-        echo "Error inserting data: " . $$update_mark_stmt->error;
+            if ($stmt) {
+                $stmt->bind_param("siiiii", $feedback, $employeeId, $grader_id, $is_correct, $writtenAnswerId, $module_id);
+
+                if ($stmt->execute()) {
+                    echo "Answer Marked Successfully";
+
+                    // Update status in written_answers table
+                    $update_mark_status = "UPDATE written_answers SET is_marked = 1 WHERE written_answer_id = ? ";
+                    $update_mark_stmt = $conn->prepare($update_mark_status);
+
+                    if ($update_mark_stmt) {
+                        $update_mark_stmt->bind_param("i", $writtenAnswerId);
+
+                        if ($update_mark_stmt->execute()) {
+                            echo "Status updated!";
+                        } else {
+                            echo "Error updating status after insertion: " . $update_mark_stmt->error;
+                        }
+
+                        // Redirect to the same page after updating
+                        header("Location: " . $_SERVER['REQUEST_URI']);
+                        exit();
+                    } else {
+                        echo "Error preparing status update statement: " . $conn->error;
+                    }
+                } else {
+                    echo "Insert Not Successful: " . $stmt->error;
+                }
+
+                $stmt->close();
+            } else {
+                echo "Insert Prepared statement error: " . $conn->error;
+            }
+        }
     }
 }
 

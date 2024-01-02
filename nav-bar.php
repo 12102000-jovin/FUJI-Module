@@ -54,8 +54,8 @@
                         Progress
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end " aria-labelledby="progressDropdown">
-                        <li><a class="dropdown-item" href="progress.php">Progress (MCQ)</a></li>
-                        <li><a class="dropdown-item" href="written-progress.php">Progress (Essay)</a></li>
+                        <li><a class="dropdown-item" href="progress.php">MCQ Progress</a></li>
+                        <li><a class="dropdown-item" href="written-progress.php"> Essay Progress</a></li>
                     </ul>
                 </li>
 
@@ -71,8 +71,11 @@
                             Admin
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-                            <li><a class="dropdown-item" href="report.php">Report (MCQ)</a></li>
-                            <li><a class="dropdown-item" href="written-report.php">Report (Essay)</a></li>
+                            <li>
+                                <h6 class="dropdown-header" style="color: #043f9d">Report</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="report.php">MCQ Report</a></li>
+                            <li><a class="dropdown-item" href="written-report.php">Essay Report</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -94,7 +97,14 @@
                             Supervisor
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="supervisorDropdown">
-                            <li><a class="dropdown-item" href="report.php">Report</a></li>
+                            <li>
+                                <h6 class="dropdown-header" style="color: #043f9d">Report</h6>
+                            </li>
+                            <li><a class="dropdown-item" href="report.php">MCQ Report</a></li>
+                            <li><a class="dropdown-item" href="written-report.php">Essay Report</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="allocate.php">Manage Users</a></li>
                             <li><a class="dropdown-item" href="allocate-group.php">Allocate by Department</a></li>
                             <li><a class="dropdown-item" href="written-question-module.php">Mark Essay Question</a></li>

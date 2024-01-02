@@ -88,7 +88,14 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
       <form method="post" class="text-white p-5 rounded-3 bg-gradient signature-bg-color">
         <?php
 
-        // At the beginning of your PHP code where the quiz starts
+        // Check if the quiz session has timed out (e.g., 30 minutes timeout)
+        $sessionTimeout = 5 * 60;
+
+        if (isset($_SESSION['quiz_start_time']) && (time() - $_SESSION['quiz_start_time']) > $sessionTimeout) {
+          // Session has timed out, reset the quiz start time
+          unset($_SESSION['quiz_start_time']);
+        }
+
         if (!isset($_SESSION['quiz_start_time'])) {
           $_SESSION['quiz_start_time'] = time(); // Store the quiz start time in the session
         }
@@ -238,12 +245,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           $formattedElapsedTime = "$elapsedMinutes" . "m " . "$elapsedSeconds" . "s";
           echo "Total Time: <strong> $formattedElapsedTime </strong><br><br>";
 
-
-          $endTime = time();
-          $elapsedTimeInSeconds = $endTime - $_SESSION['quiz_start_time'];
-          // var_dump($elapsedTimeInSeconds);
-          // echo "End Time: " . date("Y-m-d H:i:s", $endTime) . "<br>";
-          // echo "Elapsed Time: " . gmdate("H:i:s", $elapsedTimeInSeconds) . "<br>";
+          // echo "End Time: " . date("Y-m-d H:i:s", $_SESSION['$endTime']) . "<br>";
 
           unset($_SESSION['quiz_start_time']);
 
@@ -300,25 +302,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
       <p class="mb-0 font-weight-bold" style="font-size: 1.5vh"><strong>&copy; <?php echo date('Y'); ?> FUJI Training Module. All rights reserved.</strong></p>
     </div>
   </footer>
-
-  <!-- Logout Modal -->
-  <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to logout?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a href="?logout=true" class="btn btn-danger">Logout</a>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ================================================================================== -->
 

@@ -1,6 +1,8 @@
 <?php
-// Start the session, to load all the Session Variables
-session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Connect to the database
 require_once("db_connect.php");
 // Checking the inactivity 
@@ -41,7 +43,7 @@ $allLicenseResult = $conn->query($allLicenseSql);
 $employee_id = $_GET['employee_id'];
 
 // Query to fetch data from the user_licenses table based on the employee_id
-$currentLicenseSql = "SELECT licenses.license_name, user_licenses.issue_date, user_licenses.expiration_date, user_licenses.license_id, user_licenses.license_number
+$currentLicenseSql = "SELECT licenses.license_name, user_licenses.issue_date, user_licenses.expiration_date, user_licenses.license_id, user_licenses.license_number, user_licenses.license_image
                         FROM user_licenses
                         INNER JOIN licenses ON user_licenses.license_id = licenses.license_id
                         WHERE user_licenses.employee_id = $employee_id";
@@ -75,6 +77,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $issue_date = $_POST['issue_date'];
     $expiration_date = $_POST['expiration_date'];
     $license_number = $_POST['license_number'];
+    $license_image = $_FILES["license_image"];
+
+    // File paths
+    $imagePath = "./Images/" . basename($license_image["name"]);
+
+    // Move uploaded files to the specified directories
+    move_uploaded_file($license_image["tmp_name"], $imagePath);
 
     // Retrieve license_id from licenses table
     $retrieve_license_query = "SELECT license_id FROM licenses WHERE license_name = ?";
@@ -103,13 +112,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // License doesn't exist, proceed with insertion
 
             // Insert data into user_licenses table
-            $insert_query = "INSERT INTO user_licenses (employee_id, license_id, license_number, issue_date, expiration_date) VALUES (?, ?, ?, ?, ?)";
+            $insert_query = "INSERT INTO user_licenses (employee_id, license_id, license_number, issue_date, expiration_date, license_image) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($insert_query);
-            $stmt->bind_param("iisss", $employee_id, $license_id, $license_number, $issue_date, $expiration_date);
+            $stmt->bind_param("iissss", $employee_id, $license_id, $license_number, $issue_date, $expiration_date, $imagePath);
 
             if ($stmt->execute()) {
                 // Set a session variable to indicate successful insertion
-                session_start();
+
                 $_SESSION['insert_success'] = true;
 
                 // Redirect to the same page after inserting
@@ -168,15 +177,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['license_id'])) {
     $edited_issue_date = $_POST['issue_date'];
     $edited_expiration_date = $_POST['expiration_date'];
     $edited_license_number = $_POST['license_number'];
+    $edited_license_image = $_FILES["license_image"];
+
+    if ($edited_license_image["size"] > 0) {
+        // File paths
+        $editedImagePath = "./Images/" . basename($edited_license_image["name"]);
+
+        // Move uploaded files to the specified directories
+        move_uploaded_file($edited_license_image["tmp_name"], $editedImagePath);
+    } else {
+        $editedImagePath = $_POST['existing_license_image_path'];
+    }
 
     // Update data in user_licenses table
-    $update_query = "UPDATE user_licenses SET issue_date = ?, expiration_date = ?, license_number = ? WHERE employee_id = ? AND license_id = ?";
+    $update_query = "UPDATE user_licenses SET issue_date = ?, expiration_date = ?, license_number = ?, license_image = ? WHERE employee_id = ? AND license_id = ?";
     $stmt = $conn->prepare($update_query);
-    $stmt->bind_param("sssii", $edited_issue_date, $edited_expiration_date, $edited_license_number, $employee_id, $edited_license_id);
+    $stmt->bind_param("ssssii", $edited_issue_date, $edited_expiration_date, $edited_license_number, $editedImagePath, $employee_id, $edited_license_id);
 
     if ($stmt->execute()) {
         // Set a session variable to indicate successful update
-        session_start();
+
         $_SESSION['update_success'] = true;
 
         // Redirect to the same page after updating
@@ -204,7 +224,6 @@ $conn->close();
     <!-- Linking external CSS stylesheet to apply styles to the HTML document -->
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <!-- Internal CSS for the HTML -->
     <style>
@@ -271,7 +290,7 @@ $conn->close();
             <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
         <div class="d-flex justify-content-center mb-3">
-            <h1><strong>Manage License</strong></h1>
+            <h1><strong>Manage License </strong></h1>
         </div>
         <div class="row justify-content-center">
             <div class="col-md-12">
@@ -327,6 +346,7 @@ $conn->close();
                         <table class="table table-striped table-hover border">
                             <thead class="signature-bg-color">
                                 <tr class="text-center align-middle">
+                                    <th>License Image</th>
                                     <th>License Id</th>
                                     <th>License Name</th>
                                     <th>Issue Date</th>
@@ -337,13 +357,15 @@ $conn->close();
                             <tbody class="align-middle">
                                 <?php if ($currentLicenseResult->num_rows > 0) {
                                     while ($row = $currentLicenseResult->fetch_assoc()) { ?>
-                                        <tr class="text-center">
+                                        <tr class="text-center" data-bs-toggle="modal" data-bs-target="#licenseImageModal">
+                                            <td><img src=" <?php echo $row["license_image"] ?>" alt="<?php echo $row["license_image"]; ?>" class="img-fluid" style="max-height: 100px; max-width: 100px;">
+                                            </td>
                                             <td><?php echo $row["license_number"]; ?></td>
                                             <td class="no-wrap"><?php echo $row["license_name"]; ?></td>
                                             <td class="no-wrap"><?php echo $row["issue_date"]; ?></td>
                                             <td class="no-wrap"><?php echo $row["expiration_date"]; ?></td>
                                             <td>
-                                                <a href="#" onclick="showEditModal(<?php echo $employee_id; ?>, <?php echo $row['license_id']; ?>, '<?php echo $row['issue_date']; ?>', '<?php echo $row['expiration_date']; ?>', '<?php echo $row['license_number']; ?>')">
+                                                <a href="#" onclick="showEditModal(<?php echo $employee_id; ?>, <?php echo $row['license_id']; ?>, '<?php echo $row['issue_date']; ?>', '<?php echo $row['expiration_date']; ?>', '<?php echo $row['license_number']; ?>', '<?php echo $row['license_image']; ?>')">
                                                     <i class="fa-regular fa-pen-to-square signature-color tooltips" data-toggle="tooltip" data-placement="top" title="Edit License Date"></i>
                                                 </a>
                                             </td>
@@ -417,7 +439,7 @@ $conn->close();
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="license_name" class="form-label">License Name</label>
                             <select class="form-select" id="license_name" name="license_name" required>
@@ -438,6 +460,10 @@ $conn->close();
                         <div class="mb-3">
                             <label for="expiration_date" class="form-label">Expiration Date</label>
                             <input type="date" class="form-control" id="expiration_date" name="expiration_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="license_image" class="form-label">License Image</label>
+                            <input type="file" class="form-control" id="license_image" name="license_image" required>
                         </div>
                         <input type="hidden" name="employee_id" value="<?php echo $employee_id; ?>">
                         <div class="d-flex justify-content-end">
@@ -462,7 +488,29 @@ $conn->close();
                     </button>
                 </div>
                 <div class="modal-body">
-                    License has been successfully added.
+                    License has successfully added.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================================== -->
+
+    <!-- Successful update of license Modal -->
+    <div class="modal fade" id="updateSuccessModal" tabindex="-1" role="dialog" aria-labelledby="updateSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateSuccessModal">Successful</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    License has successfully updated.
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -496,14 +544,12 @@ $conn->close();
     <!-- ================================================================================== -->
 
     <!-- Delete confirmation modal -->
-    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="z-index: 1070;">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="confirmationModalLabel">Confirm Deletion</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     Are you sure you want to delete this license?
@@ -519,26 +565,33 @@ $conn->close();
     <!-- ================================================================================== -->
 
     <!-- Edit license modal -->
-    <div class="modal fade" id="editLicenseModal" tabindex="-1" role="dialog" aria-labelledby="editLicenseModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
+    <div class="modal fade" id="editLicenseModal" tabindex="-1" role="dialog" aria-labelledby="editLicenseModalLabel" aria-hidden="true" style="z-index: 1080;">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 600px;">
+            <div class=" modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editLicenseModalLabel">Edit License</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editLicenseForm" method="post">
-                        <div class="mb-3">
-                            <label for="license_number" class="form-label">License Number </label>
+                    <form id="editLicenseForm" method="post" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="license_number" class="form-label">License Number</label>
                             <input type="text" class="form-control" id="edit_license_number" name="license_number" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label for="edit_issue_date" class="form-label">Issue Date</label>
                             <input type="date" class="form-control" id="edit_issue_date" name="issue_date" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label for="edit_expiration_date" class="form-label">Expiration Date</label>
                             <input type="date" class="form-control" id="edit_expiration_date" name="expiration_date" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="edit_license_image" class="form-label">License Image</label>
+                            <input type="file" class="form-control" id="edit_license_image" name="license_image">
+                            <!-- Check if $row is set before accessing its elements -->
+                            <input type="hidden" id="existing_license_image_path" name="existing_license_image_path" value="">
+
                         </div>
                         <input type="hidden" id="edit_license_id" name="license_id">
                         <input type="hidden" name="employee_id" value="<?php echo $employee_id; ?>">
@@ -551,8 +604,27 @@ $conn->close();
         </div>
     </div>
 
-    <?php require_once("footer_logout.php") ?>
     <!-- ================================================================================== -->
+
+    <!-- License Modal -->
+    <div class="modal fade" id="licenseImageModal" tabindex="-1" aria-labelledby="licenseImageModalLabel" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="licenseImageModalLabel">License Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="resultDetails"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php require_once("footer_logout.php") ?>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -564,7 +636,6 @@ $conn->close();
         $(document).ready(function() {
             // Check if the session variable is set
             <?php
-            session_start();
             if (isset($_SESSION['insert_success']) && $_SESSION['insert_success'] === true) {
                 // Unset the session variable
                 unset($_SESSION['insert_success']);
@@ -583,13 +654,28 @@ $conn->close();
         $(document).ready(function() {
             // Check if the session variable is set
             <?php
-            session_start();
             if (isset($_SESSION['licenseExist']) && $_SESSION['licenseExist'] === true) {
                 // Unset the session variable
                 unset($_SESSION['licenseExist']);
             ?>
                 // Show the success modal
                 $("#notificationModal").modal("show");
+            <?php
+            }
+            ?>
+        });
+    </script>
+
+    <script>
+        // Show the update success modal
+        $(document).ready(function() {
+            <?php
+            if (isset($_SESSION['update_success']) && $_SESSION['update_success'] === true) {
+                // Unset the session variable
+                unset($_SESSION['update_success']);
+            ?>
+                // Show the update success modal
+                $("#updateSuccessModal").modal("show");
             <?php
             }
             ?>
@@ -612,6 +698,11 @@ $conn->close();
     <script>
         // Function to show the confirmation modal
         function showDeleteConfirmation(employeeId, licenseId) {
+
+            $('#deleteConfirmationModal').on('click', function() {
+                $('#licenseImageModal').modal('hide');
+            });
+
             $('#deleteConfirmationModal').modal('show');
 
             // Add event listener to the confirm button
@@ -624,14 +715,22 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
+    <!-- Modal to update the license details -->
     <script>
         // Function to show the edit modal and populate fields
-        function showEditModal(employeeId, licenseId, issueDate, expirationDate, licenseNumber) {
+        function showEditModal(event, employeeId, licenseId, issueDate, expirationDate, licenseNumber, existingImagePath) {
+
+            $('#licenseImageModal').modal('hide');
+
+
             // Set the form fields in the edit modal
             $('#edit_issue_date').val(issueDate);
             $('#edit_expiration_date').val(expirationDate);
             $('#edit_license_id').val(licenseId);
             $('#edit_license_number').val(licenseNumber);
+
+            // Set the existing image path
+            $('#existing_license_image_path').val(existingImagePath);
 
             // Show the edit modal
             $('#editLicenseModal').modal('show');
@@ -639,21 +738,30 @@ $conn->close();
     </script>
 
     <!-- ==================================================================================  -->
-
+    <!-- Modal to show the license details -->
     <script>
-        // Show the update success modal
-        $(document).ready(function() {
-            <?php
-            session_start();
-            if (isset($_SESSION['update_success']) && $_SESSION['update_success'] === true) {
-                // Unset the session variable
-                unset($_SESSION['update_success']);
-            ?>
-                // Show the update success modal
-                $("#updateSuccessModal").modal("show");
-            <?php
+        let licenseImageModal = document.getElementById('licenseImageModal');
+        licenseImageModal.addEventListener('show.bs.modal', function(event) {
+            let button = event.relatedTarget;
+
+            // Check if the clicked element has the 'data-bs-toggle' attribute with a value of 'modal'
+            if (button && button.getAttribute('class') === 'modal') {
+                // If the clicked element is the edit button, prevent the default behavior (opening the modal)
+                event.preventDefault();
+            } else {
+                let row = button.closest('tr');
+
+                let licenseImageSrc = row.cells[0].querySelector('img').getAttribute('src');
+                let licenseId = row.cells[1].textContent;
+
+                let resultDetails = document.getElementById('resultDetails');
+                resultDetails.innerHTML = `
+                <p><strong>License ID:</strong> ${licenseId}</p>
+                <div class="d-flex justify-content-center">
+                    <img src="${licenseImageSrc}" alt="License Image" class="img-fluid" style="max-height: 400px; max-width: 100%;">
+                </div>
+            `;
             }
-            ?>
         });
     </script>
 

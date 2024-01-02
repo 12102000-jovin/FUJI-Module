@@ -1,7 +1,5 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+
 
 
 // Connect to the database
@@ -162,30 +160,38 @@ function getUnmarkedQuestionCount($conn, $moduleId, $employeeId)
 // Retrieve modules from the 'modules' table that have been attempted by the user along with the highest score
 // Query to retrieve attempted modules and their scores for a specific employee
 $attemptedModulesQuery = "
-    SELECT 
-        ma.module_id, 
-        m.module_name, 
-        m.module_description, 
-        m.module_image, 
-        r.score,
-        wr.is_correct
-    FROM module_allocation ma
-    JOIN modules m ON ma.module_id = m.module_id
-    LEFT JOIN results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
-    LEFT JOIN written_results wr ON ma.module_id = wr.module_id AND wr.employee_id = '$employee_id'
-    JOIN (
-      SELECT module_id, MAX(score) AS max_score
-      FROM results
-      WHERE employee_id = '$employee_id'
-      GROUP BY module_id
-    ) t ON r.module_id = t.module_id AND r.score = t.max_score
-    WHERE m.is_archived = '0' AND r.employee_id = '$employee_id'
-    ORDER BY ma.module_id
+SELECT 
+    ma.module_id, 
+    m.module_name, 
+    m.module_description, 
+    m.module_image, 
+    r.score,
+    COALESCE(MAX(r.score), wa.written_answer) AS result_or_written_answer
+FROM 
+    module_allocation ma
+JOIN 
+    modules m ON ma.module_id = m.module_id
+LEFT JOIN 
+    results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
+LEFT JOIN (
+    SELECT module_id, MAX(score) AS max_score
+    FROM results
+    WHERE employee_id = '$employee_id'
+    GROUP BY module_id
+) t ON r.module_id = t.module_id AND r.score = t.max_score
+LEFT JOIN 
+    written_answers wa ON ma.module_id = wa.module_id AND ma.employee_id = wa.employee_id
+WHERE 
+    m.is_archived = '0' 
+    AND (r.employee_id = '$employee_id' OR wa.employee_id = '$employee_id')
+GROUP BY 
+    ma.module_id, m.module_name, m.module_description, m.module_image
+ORDER BY 
+    ma.module_id;
+
   ";
 
-
 $attemptedModulesResult = $conn->query($attemptedModulesQuery);
-
 /* ================================================================================== */
 
 // Retrieve modules from the 'modules' table that have NOT been attempted by the user 
@@ -199,6 +205,9 @@ $unattemptedModulesQuery = "
         SELECT r.module_id FROM results r WHERE r.employee_id = '$employee_id'
       ) 
       AND m.is_archived = '0'
+      AND ma.module_id NOT IN ( 
+        SELECT wa.module_id FROM written_answers wa WHERE wa.employee_id = '$employee_id' AND ma.module_id = wa.module_id
+      )
     ORDER BY ma.module_id
   ";
 $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
@@ -238,17 +247,44 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
       }
     }
 
-    /* .accordion-button:not(.collapsed) {
-      background-color: #043f9d;
+    /* Custom CSS to make Offcanvas width smaller */
+    #offcanvasRight {
+      max-width: 40vh;
     }
-
-    .accordion-button {
-      background-color: #043f9d;
-    } */
 
     .accordion-button::after {
       /* Set filter values for white color */
       filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+    }
+
+    .fixed-center-right {
+      position: fixed;
+      top: 50%;
+      right: -0.5%;
+      transform: translateY(-50%);
+    }
+
+    #offCanvasBtn,
+    .status-badge {
+      transition: all 0.1s ease-in-out;
+    }
+
+    #offCanvasBtn:hover {
+      transform: translateX(-8%);
+    }
+
+    @media (max-width: 576px) {
+      .accordion-body p {
+        font-size: 10px
+      }
+    }
+
+    .tooltip-inner {
+      white-space: pre-wrap;
+    }
+
+    .status-badge:hover {
+      transform: translateY(-8%);
     }
   </style>
 
@@ -279,228 +315,106 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
   </div>
 
   <!-- ==================================================================================  -->
-  <?php
-  // Checking if there are any unattempted modules in the result set.
-  if ($unattemptedModulesResult && $unattemptedModulesResult->num_rows > 0) {
-    // Count the number of unattempted modules
-    $numUnattemptedModules = $unattemptedModulesResult->num_rows;
-  ?>
-    <div class="container mt-5">
-      <div class="row mb-3">
-        <div class="col-12">
-          <hr>
-          <div class="d-flex justify-content-between align-items-center">
-            <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold"> Not Completed Modules</h3>
-            <?php if ($numUnattemptedModules > 3) : ?>
-              <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
-            <?php elseif ($numUnattemptedModules != 1) : ?>
-              <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl d-md-none scroll-icon" id="menu-icon"></i>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================================================================================  -->
-
-    <div class="container">
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="flex-wrap: nowrap; overflow-x: auto;">
-        <?php
-        while ($unattemptedModuleRow = $unattemptedModulesResult->fetch_assoc()) {
-          $moduleId = $unattemptedModuleRow['module_id'];
-          $moduleName = $unattemptedModuleRow['module_name'];
-          $moduleDescription = $unattemptedModuleRow['module_description'];
-          $moduleImage = $unattemptedModuleRow['module_image'];
-
-          // Limit the description to a maximum of 100 characters
-          $maxCharacters = 100;
-          $charactersArray = str_split($moduleDescription);
-          $limitedDescription = implode('', array_slice($charactersArray, 0, $maxCharacters));
-        ?>
-          <div class="col">
-            <a onclick="window.location.href='module-video.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">
-              <div class="card h-100 shadow" style="cursor: pointer">
-                <img src="<?php echo $moduleImage; ?>" class="card-img-top p-4" alt="Icon failed to load" style="max-height: 300px; object-fit: contain;">
-                <div class="card-body d-flex flex-column">
-                  <h5 class="card-title mt-auto"><?php echo $moduleName; ?></h5>
-                  <p class="card-text" style="text-align: justify">
-                    <?php
-                    // Check if the description is longer than the limited one
-                    if (count($charactersArray) > $maxCharacters) {
-                      echo $limitedDescription . ' ...';
-                    } else {
-                      echo $limitedDescription;
-                    }
-                    ?>
-                  </p>
-                  <?php
-                  // Show "To-Do" badge
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                                <span style="font-size: 8px">To-Do</span>
-                              </span>';
-
-                  ?>
-                </div>
-              </div>
-            </a>
-          </div>
-        <?php
-        }
-        ?>
-
-      </div>
-    </div>
-  <?php
-  } else {
-    // Show nothing when there is no unattempted modules
-  }
-  $unattemptedModulesResult->free();
-  ?>
-
-  <!-- ==================================================================================  -->
-
-  <?php
-  // Checking if there are any attempted modules in the result set.
-  if ($attemptedModulesResult && $attemptedModulesResult->num_rows > 0) {
-    // Count the number of attempted modules
-    $numAttemptedModules = $attemptedModulesResult->num_rows;
-  ?>
-    <div class="container mt-5">
-      <div class="row mb-3">
-        <div class="col-12">
-          <hr>
-          <div class="d-flex justify-content-between align-items-center">
-            <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold">Attempted Modules</h3>
-            <?php if ($numAttemptedModules > 3) : ?>
-              <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
-            <?php elseif ($numAttemptedModules != 1) : ?>
-              <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl d-md-none scroll-icon" id="menu-icon"></i>
-            <?php endif; ?>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="flex-wrap: nowrap; overflow-x: auto;">
-        <?php
-        // Looping through the attempted modules and fetching each row's data.
-        while ($attemptedModulesRow = $attemptedModulesResult->fetch_assoc()) {
-          $moduleId = $attemptedModulesRow['module_id'];
-          $moduleName = $attemptedModulesRow['module_name'];
-          $moduleDescription = $attemptedModulesRow['module_description'];
-          $moduleImage = $attemptedModulesRow['module_image'];
-          $moduleScore = $attemptedModulesRow['score'];
-          $isCorrect = $attemptedModulesRow['is_correct'];
-
-
-          // Get the count for the current module
-          $countForModule = getCountForModule($conn, $moduleId, $employee_id);
-
-          // Output the count for the current module
-          echo "Number of False answer:  $countForModule <br><br>";
-
-
-          // Example usage
-          $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
-          echo "Number of unmarked questions: $unmarkedCount";
-
-          // Check if the module has already been added with a higher score
-          if (isset($highestScores[$moduleId]) && $highestScores[$moduleId] >= $moduleScore) {
-            continue; // Skip this module
-          }
-
-          // Store the highest score for the module
-          $highestScores[$moduleId] = $moduleScore;
-
-          // Limit the description to a maximum of 100 charac
-          $maxCharacters = 100;
-          $charactersArray = str_split($moduleDescription);
-          $limitedDescription = implode('', array_slice($charactersArray, 0, $maxCharacters));
-
-        ?>
-          <!-- Display the module -->
-          <div class="col">
-            <a onclick="window.location.href='module-video.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">
-              <div class="card h-100 shadow" style="cursor: pointer;">
-                <img src="<?php echo $moduleImage; ?>" class="card-img-top p-4" alt="Icon failed to load" style="max-height: 300px; object-fit: contain;">
-                <div class="card-body d-flex flex-column">
-                  <h5 class="card-title mt-auto"><?php echo $moduleName; ?></h5>
-                  <p class="card-text" style="text-align: justify">
-                    <?php
-                    // Check if the description is longer than the limited one
-                    if (count($charactersArray) > $maxCharacters) {
-                      echo $limitedDescription . ' ...';
-                    } else {
-                      echo $limitedDescription;
-                    }
-                    ?>
-                  </p>
-                </div>
-                <?php
-                // Check if the module is uncompleted or has less than 100% score
-                if ($moduleScore < 100 && $countForModule === null) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
-                              <span style="font-size: 8px">To-Do</span>
-                          </span>';
-                } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
-                              <span style="font-size: 8px">Essay!</span>
-                          </span>';
-                } else if ($moduleScore == 100 && $unmarkedCount > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
-                            <span style="font-size: 8px">Unmarked!</span>
-                        </span>';
-                } else if ($moduleScore < 100 && $countForModule == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
-                            <span style="font-size: 8px">MCQ!</span>
-                        </span>';
-                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
-                            <span style="font-size: 8px">UnMarked!</span>
-                        </span>';
-                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center
-                            <span style="font-size: 8px">Done</span>
-                        </span>';
-                }
-                ?>
-                <div class="m-3">
-                  <p class="card-text">Highest Score: <?php echo $highestScores[$moduleId]; ?>%</p>
-                  <div class="progress" style="height: 5px">
-                    <div class="progress-bar signature-bg-color" role="progressbar" style="width: <?php echo $highestScores[$moduleId]; ?>%; aria-valuenow=" <?php echo $highestScores[$moduleId]; ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                  </div>
-                </div>
-              </div>
-            </a>
-          </div>
-      <?php
-        }
-      } else {
-        // Show nothing when there is no attempted modules
-      }
-      $attemptedModulesResult->free();
-      ?>
-      </div>
-    </div>
-    </div>
-
-    <!-- ==================================================================================  -->
-
+  <div>
     <?php
-    if ($modulesResult && $modulesResult->num_rows > 0) {
-      // Count the number of modules
-      $numModulesResult = $modulesResult->num_rows;
+    // Checking if there are any unattempted modules in the result set.
+    if ($unattemptedModulesResult && $unattemptedModulesResult->num_rows > 0) {
+      // Count the number of unattempted modules
+      $numUnattemptedModules = $unattemptedModulesResult->num_rows;
+
+      // echo 'number of modules: ' .  $numUnattemptedModules;
     ?>
       <div class="container mt-5">
         <div class="row mb-3">
           <div class="col-12">
             <hr>
             <div class="d-flex justify-content-between align-items-center">
-              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold">All Modules</h3>
-              <?php if ($numModulesResult > 3) : ?>
+              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold"> Not Completed Modules</h3>
+              <?php if ($numUnattemptedModules > 3) : ?>
                 <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
-              <?php elseif ($numModulesResult != 1) : ?>
+              <?php elseif ($numUnattemptedModules != 1) : ?>
+                <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl d-md-none scroll-icon" id="menu-icon"></i>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================================  -->
+
+      <div class="container">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="flex-wrap: nowrap; overflow-x: auto;">
+          <?php
+          while ($unattemptedModuleRow = $unattemptedModulesResult->fetch_assoc()) {
+            $moduleId = $unattemptedModuleRow['module_id'];
+            $moduleName = $unattemptedModuleRow['module_name'];
+            $moduleDescription = $unattemptedModuleRow['module_description'];
+            $moduleImage = $unattemptedModuleRow['module_image'];
+
+            // Limit the description to a maximum of 100 characters
+            $maxCharacters = 100;
+            $charactersArray = str_split($moduleDescription);
+            $limitedDescription = implode('', array_slice($charactersArray, 0, $maxCharacters));
+          ?>
+            <div class="col">
+              <a onclick="window.location.href='module-video.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">
+                <div class="card h-100 shadow" style="cursor: pointer">
+                  <img src="<?php echo $moduleImage; ?>" class="card-img-top p-4" alt="Icon failed to load" style="max-height: 300px; object-fit: contain;">
+                  <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mt-auto"><?php echo $moduleName; ?></h5>
+                    <p class="card-text" style="text-align: justify">
+                      <?php
+                      // Check if the description is longer than the limited one
+                      if (count($charactersArray) > $maxCharacters) {
+                        echo $limitedDescription . ' ...';
+                      } else {
+                        echo $limitedDescription;
+                      }
+                      ?>
+                    </p>
+                    <?php
+                    // Show "To-Do" badge
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                                <span style="font-size: 8px">To-Do</span>
+                              </span>';
+
+                    ?>
+                  </div>
+                </div>
+              </a>
+            </div>
+          <?php
+          }
+          ?>
+
+        </div>
+      </div>
+    <?php
+    } else {
+      // Show nothing when there is no unattempted modules
+    }
+    $unattemptedModulesResult->free();
+    ?>
+
+    <!-- ==================================================================================  -->
+
+    <?php
+    // Checking if there are any attempted modules in the result set.
+    if ($attemptedModulesResult && $attemptedModulesResult->num_rows > 0) {
+      // Count the number of attempted modules
+      $numAttemptedModules = $attemptedModulesResult->num_rows;
+
+      // echo 'number of modules: ' .  $numAttemptedModules;
+    ?>
+      <div class="container mt-5">
+        <div class="row mb-3">
+          <div class="col-12">
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold">Attempted Modules</h3>
+              <?php if ($numAttemptedModules > 3) : ?>
+                <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
+              <?php elseif ($numAttemptedModules != 1) : ?>
                 <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl d-md-none scroll-icon" id="menu-icon"></i>
               <?php endif; ?>
             </div>
@@ -511,30 +425,40 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
       <div class="container">
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="flex-wrap: nowrap; overflow-x: auto;">
           <?php
-          while ($moduleRow = $modulesResult->fetch_assoc()) {
-            $moduleId = $moduleRow['module_id'];
-            $moduleName = $moduleRow['module_name'];
-            $moduleDescription = $moduleRow['module_description'];
-            $moduleImage = $moduleRow['module_image'];
-            $moduleScore = $moduleRow['score'];
-            $isCorrect = $moduleRow['is_correct'];
+          // Looping through the attempted modules and fetching each row's data.
+          while ($attemptedModulesRow = $attemptedModulesResult->fetch_assoc()) {
+            $moduleId = $attemptedModulesRow['module_id'];
+            $moduleName = $attemptedModulesRow['module_name'];
+            $moduleDescription = $attemptedModulesRow['module_description'];
+            $moduleImage = $attemptedModulesRow['module_image'];
+            $moduleScore = $attemptedModulesRow['score'];
 
             // Get the count for the current module
             $countForModule = getCountForModule($conn, $moduleId, $employee_id);
 
             // Output the count for the current module
-            echo "Number of False answer:  $countForModule <br><br>";
+            // echo "Number of False answer:  $countForModule <br><br>";
 
 
             // Example usage
             $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
-            echo "Number of unmarked questions: $unmarkedCount";
+            // echo "Number of unmarked questions: $unmarkedCount";
 
-            // Limit the description to a maximum of 100 character
+            // Check if the module has already been added with a higher score
+            if (isset($highestScores[$moduleId]) && $highestScores[$moduleId] >= $moduleScore) {
+              continue; // Skip this module
+            }
+
+            // Store the highest score for the module
+            $highestScores[$moduleId] = $moduleScore;
+
+            // Limit the description to a maximum of 100 charac
             $maxCharacters = 100;
             $charactersArray = str_split($moduleDescription);
             $limitedDescription = implode('', array_slice($charactersArray, 0, $maxCharacters));
+
           ?>
+            <!-- Display the module -->
             <div class="col">
               <a onclick="window.location.href='module-video.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">
                 <div class="card h-100 shadow" style="cursor: pointer;">
@@ -554,59 +478,217 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   </div>
                   <?php
                   // Check if the module is uncompleted or has less than 100% score
-                  if ($moduleScore < 100 && $countForModule === null) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
+                  if ($moduleScore < 100 && $countForModule === null || $moduleScore < 100 && $countForModule > 0) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
                               <span style="font-size: 8px">To-Do</span>
                           </span>';
                   } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center"
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
                               <span style="font-size: 8px">Essay!</span>
                           </span>';
-                  } else if ($moduleScore == 100 && $unmarkedCount > 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                  } else if ($moduleScore == 100 && $unmarkedCount > 0 || $moduleScore < 100 && $unmarkedCount > 0) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
                             <span style="font-size: 8px">Unmarked!</span>
                         </span>';
                   } else if ($moduleScore < 100 && $countForModule == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
                             <span style="font-size: 8px">MCQ!</span>
                         </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
                             <span style="font-size: 8px">UnMarked!</span>
                         </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
                             <span style="font-size: 8px">Done</span>
                         </span>';
                   }
                   ?>
-                </div>
               </a>
+              <div class="container mt-auto">
+                <hr style="border: 1px solid black;" class="m-0 mb-1">
+                <div class="d-flex justify-content-center mt-auto mb-1">
+                  <strong>Current Status</strong>
+                </div>
+                <div class="d-flex justify-content-between mt-auto m-3 mb-3">
+                  <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") . "Unmarked Questions: $unmarkedCount"; ?>">
+                    Essay
+                  </button>
+
+                  <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($highestScores[$moduleId] !== null ? "Highest MCQ Score: $highestScores[$moduleId]" . "%" : "No Attempt") ?>">
+                    MCQ
+                  </button>
+                </div>
+                <!-- <div class="progress" style="height: 5px">
+                      <div class="progress-bar signature-bg-color" role="progressbar" style="width: <?php echo $highestScores[$moduleId]; ?>%; aria-valuenow=" <?php echo $highestScores[$moduleId]; ?> aria-valuemin="0" aria-valuemax="100"></div>
+                    </div> -->
+              </div>
             </div>
-        <?php
+
+        </div>
+    <?php
           }
         } else {
-          echo "<div class='container mt-5'>";
-          echo "<div class='d-flex justify-content-center align-items-center'>";
-          echo "<div>";
-          echo "<h2> There are no modules allocated. </h2>";
-          echo "</div>";
-          echo "</div>";
-          echo "</div>";
+          // Show nothing when there is no attempted modules
         }
-        ?>
+        $attemptedModulesResult->free();
+    ?>
+      </div>
+  </div>
+
+
+  <!-- ==================================================================================  -->
+
+  <?php
+  if ($modulesResult && $modulesResult->num_rows > 0) {
+    // Count the number of modules
+    $numModulesResult = $modulesResult->num_rows;
+  ?>
+    <div class="container mt-5">
+      <div class="row mb-3">
+        <div class="col-12">
+          <hr>
+          <div class="d-flex justify-content-between align-items-center">
+            <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold">All Modules</h3>
+            <?php if ($numModulesResult > 3) : ?>
+              <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
+            <?php elseif ($numModulesResult != 1) : ?>
+              <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl d-md-none scroll-icon" id="menu-icon"></i>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="mt-5"></div>
+    <div class="container">
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" style="flex-wrap: nowrap; overflow-x: auto;">
+        <?php
+        while ($moduleRow = $modulesResult->fetch_assoc()) {
+          $moduleId = $moduleRow['module_id'];
+          $moduleName = $moduleRow['module_name'];
+          $moduleDescription = $moduleRow['module_description'];
+          $moduleImage = $moduleRow['module_image'];
+          $moduleScore = $moduleRow['score'];
 
-      <!-- ======================== B A D G E S ======================== -->
-      <div class="container mb-5">
-        <div class="row d-flex justify-content-center">
-          <div class="container">
-            <hr>
+
+          // Get the count for the current module
+          $countForModule = getCountForModule($conn, $moduleId, $employee_id);
+
+          // Output the count for the current module
+          // echo "Number of False answer:  $countForModule <br><br>";
+
+
+          // Example usage
+          $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
+          // echo "Number of unmarked questions: $unmarkedCount";
+
+
+
+          // Limit the description to a maximum of 100 character
+          $maxCharacters = 100;
+          $charactersArray = str_split($moduleDescription);
+          $limitedDescription = implode('', array_slice($charactersArray, 0, $maxCharacters));
+        ?>
+          <div class="col">
+            <a onclick="window.location.href='module-video.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">
+              <div class="card h-100 shadow" style="cursor: pointer;">
+                <img src="<?php echo $moduleImage; ?>" class="card-img-top p-4" alt="Icon failed to load" style="max-height: 300px; object-fit: contain;">
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title mt-auto"><?php echo $moduleName; ?></h5>
+                  <p class="card-text" style="text-align: justify">
+                    <?php
+                    // Check if the description is longer than the limited one
+                    if (count($charactersArray) > $maxCharacters) {
+                      echo $limitedDescription . ' ...';
+                    } else {
+                      echo $limitedDescription;
+                    }
+                    ?>
+                  </p>
+                </div>
+                <?php
+                // Check if the module is uncompleted or has less than 100% score
+                if ($moduleScore < 100 && $countForModule === null || $moduleScore < 100 && $countForModule > 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                                <span style="font-size: 8px">To-Do</span>
+                            </span>';
+                } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                                <span style="font-size: 8px">Essay!</span>
+                            </span>';
+                } else if ($moduleScore == 100 && $unmarkedCount > 0 || $moduleScore < 100 && $unmarkedCount > 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                                <span style="font-size: 8px">Unmarked!</span>
+                            </span>';
+                } else if ($moduleScore < 100 && $countForModule == 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                                <span style="font-size: 8px">MCQ!</span>
+                            </span>';
+                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                                <span style="font-size: 8px">UnMarked!</span>
+                            </span>';
+                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
+                                <span style="font-size: 8px">Done</span>
+                            </span>';
+                }
+
+                ?>
+            </a>
+            <div class="container mt-auto">
+              <hr style="border: 1px solid black;" class="m-0 mb-1">
+              <div class="d-flex justify-content-center mt-auto mb-1">
+                <strong>Current Status</strong>
+              </div>
+              <div class="d-flex justify-content-between mt-auto m-3 mb-3">
+                <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") . "Unmarked Questions: $unmarkedCount"; ?>">
+                  Essay
+                </button>
+                <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($highestScores[$moduleId] !== null ? "Highest MCQ Score: $highestScores[$moduleId]" . "%" : "No Attempt") ?>">
+                  MCQ
+                  <!-- <?php echo $highestScores[$moduleId] ?> -->
+                  <!-- <?php echo $moduleId ?> -->
+                </button>
+              </div>
+            </div>
           </div>
-          <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold mb-3">Badges</h3>
+      </div>
+
+
+
+
+  <?php
+        }
+      } else {
+        echo "<div class='container mt-5'>";
+        echo "<div class='d-flex justify-content-center align-items-center'>";
+        echo "<div>";
+        echo "<h2> There are no modules allocated. </h2>";
+        echo "</div>";
+        echo "</div>";
+        echo "</div>";
+      }
+  ?>
+    </div>
+    </div>
+    </div>
+
+    <!-- ==================================================================================  -->
+    <div class="mt-5"></div>
+
+    <div class="d-flex justify-content-center align-items-center fixed-center-right">
+      <button class="btn btn-dark btn-sm" type="button" data-bs-toggle="offcanvas" id="offCanvasBtn" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="font-size: 10px"><i class="fa-solid fa-caret-left"></i> <strong> Badge Status </strong></button>
+    </div>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel" style="width: 50%;">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasRightLabel">Badge Status</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <!-- ======================== B A D G E S ======================== -->
+        <div class="row d-flex justify-content-center">
           <div class="col-md-10">
             <div class="accordion" id="accordionExample">
               <!-- ======================== T o - D o ======================== -->
@@ -614,13 +696,14 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                     <span class=" badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                      <span style="font-size: 14px">To-Do</span>
+                      <span>To-Do</span>
                     </span>
                   </button>
                 </h2>
                 <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify" ;>The 'To-Do' badge signifies that the module is either unattempted, incomplete, or has a score below 100% in the Multiple Choice Question (MCQ) section.</p>
+                    <p style="text-align: justify">The "To-Do" badge indicates that the module is unattempted and the module has less than 100% score in the Multiple Choice Question (MCQ) section
+                      and has false or unmarked answers in the essay section.</p>
                   </div>
                 </div>
               </div>
@@ -628,14 +711,15 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    <span class=" badge badge-lg badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                      <span style="font-size: 14px">Essay!</span>
+                    <span class=" badge badge-lg badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                      <span>Essay!</span>
                     </span>
                   </button>
                 </h2>
                 <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "Essay!" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ), but there are either essays to be completed, false answer, or unmarked essays. </p>
+                    <p style="text-align: justify">The "Essay!" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are either essay questions
+                      to be completed or false answer. You can check it in the <a href="written-progress.php">Essay Progress</a> page</p>
                   </div>
                 </div>
               </div>
@@ -643,14 +727,15 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    <span class=" badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                      <span style="font-size: 14px">MCQ!</span>
+                    <span class=" badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                      <span>MCQ!</span>
                     </span>
                   </button>
                 </h2>
                 <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p>The "MCQ!" badge indicates that the module has less than a 100% score on the Multiple Choice Question (MCQ), but the essay quiz for the module is completed. </p>
+                    <p style="text-align: justify">The "MCQ!" badge indicates that the module has less than a 100% score on the Multiple Choice Question (MCQ) section,
+                      but the essay section for the module is completed. You can check it in the <a href="progress.php">MCQ Progress</a> page </p>
                   </div>
                 </div>
               </div>
@@ -658,14 +743,15 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseThree">
-                    <span class=" badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                      <span style="font-size: 14px">Unmarked</span>
+                    <span class=" badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                      <span>Unmarked</span>
                     </span>
                   </button>
                 </h2>
                 <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p>The "Unmarked" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ), but there are unmarked questions. You can check it in the "Essay Progress" page </p>
+                    <p style="text-align: justify">The "Unmarked" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are unmarked essay questions.
+                      You can check it in the <a href="written-progress.php">Essay Progress</a> page </p>
                   </div>
                 </div>
               </div>
@@ -674,13 +760,13 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseThree">
                     <span class=" badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
-                      <span style="font-size: 14px">Done</span>
+                      <span>Done</span>
                     </span>
                   </button>
                 </h2>
                 <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p>The "Done" badge indicates that the module has already been completed, and no further actions required for the module.</p>
+                    <p style="text-align: justify">The "Done" badge indicates that the module has already been completed, and no further actions required for the module.</p>
                   </div>
                 </div>
               </div>
@@ -688,12 +774,20 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="mt-5"></div>
+    <div class="mt-5"></div>
 
-      <?php require_once("footer_logout.php") ?>
+    <?php require_once("footer_logout.php") ?>
 
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Enabling the tooltip
+      const tooltips = document.querySelectorAll('.tooltips');
+      tooltips.forEach(t => {
+        new bootstrap.Tooltip(t)
+      })
+    </script>
 </body>
 
 </html>

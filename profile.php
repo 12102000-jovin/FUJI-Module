@@ -1,5 +1,9 @@
 <?php
-session_start();
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 
 require_once("db_connect.php");
 // Checking the inactivity 
@@ -76,7 +80,7 @@ $attemptedModulesResult = $conn->query($attemptedModulesQuery);
 // ==================================================================================
 
 $licenseQuery = "
-    SELECT licenses.license_id, licenses.license_name
+    SELECT licenses.license_id, licenses.license_name, user_licenses.license_number, user_licenses.license_image
     FROM users
     INNER JOIN user_licenses ON users.employee_id = user_licenses.employee_id
     INNER JOIN licenses ON user_licenses.license_id = licenses.license_id
@@ -194,8 +198,12 @@ $licenseQueryResult = $conn->query($licenseQuery);
                                     while ($row = $licenseQueryResult->fetch_assoc()) {
                                         // Fetching data from the row
                                         $license_name = $row['license_name'];
+                                        $license_number = $row['license_number'];
+                                        $license_image = $row['license_image'];
                                 ?>
                                         <p><strong> <?php echo $license_name; ?> </strong></p>
+                                        <p><?php echo $license_number ?></p>
+                                        <img src="<?php echo $license_image; ?>" class="img-fluid" alt="Responsive image">
                                 <?php
                                     }
                                 } else {

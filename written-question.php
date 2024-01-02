@@ -34,7 +34,7 @@ $moduleId = $_GET["moduleId"];
 $select_query = "SELECT * FROM written_questions WHERE module_id = $moduleId";
 $select_result = $conn->query($select_query);
 
-if (isset($_POST['submitAnswers'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $questionNumber = 1; // Initialize the question counter outside the loop
 
     while ($row = $select_result->fetch_assoc()) {
@@ -51,16 +51,29 @@ if (isset($_POST['submitAnswers'])) {
 
                 if ($check_result->num_rows > 0) {
                     // If an answer exists, update it
-                    $update_query = "UPDATE written_answers SET written_answer = ?, datetime = NOW() , is_marked = '0' WHERE written_question_id = ? AND employee_id = ?";
+                    $update_query = "UPDATE written_answers SET written_answer = ?, datetime = NOW(), is_marked = '0' WHERE written_question_id = ? AND employee_id = ?";
                     $update_stmt = $conn->prepare($update_query);
                     if ($update_stmt) {
                         $update_stmt->bind_param("sii", $answer, $row['written_question_id'], $employeeId);
                         if ($update_stmt->execute()) {
                             echo "Answer Updated Successfully";
+
+                            // Update is_correct to NULL in written_results
+                            $nullify_query = "UPDATE written_results SET is_correct = NULL, feedback = NULL WHERE written_answer_id IN (SELECT written_answer_id FROM written_answers WHERE written_question_id = ? AND employee_id = ?)";
+                            $nullify_stmt = $conn->prepare($nullify_query);
+                            if ($nullify_stmt) {
+                                $nullify_stmt->bind_param("ii", $row['written_question_id'], $employeeId);
+                                $nullify_stmt->execute();
+                                $nullify_stmt->close();
+                            } else {
+                                echo "Nullify Prepared statement error: " . $conn->error;
+                            }
+
                             header("Location: index.php");
                         } else {
                             echo "Update Not Successful: " . $update_stmt->error;
                         }
+
                         $update_stmt->close();
                     } else {
                         echo "Update Prepared statement error: " . $conn->error;
@@ -96,6 +109,8 @@ if (isset($_POST['submitAnswers'])) {
 
     exit();
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -166,14 +181,35 @@ if (isset($_POST['submitAnswers'])) {
                             }
                             ?>
                             <div class="d-flex justify-content-center">
-                                <button type="submit" name="submitAnswers" class="btn btn-dark"> Submit Answers</button>
+                                <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#confirmationModal">Submit Answers</button>
                             </div>
+
                         </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal for Confirmation -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to submit your answers?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn signature-btn" id="confirmSubmissionBtn">Submit Answers</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Footer Section -->
     <footer class="bg-light text-center py-4 mt-auto shadow-lg">
@@ -192,6 +228,13 @@ if (isset($_POST['submitAnswers'])) {
             alert("Access to the previous page in the quiz is restricted.");
         };
     </script>
+    <script>
+        document.getElementById('confirmSubmissionBtn').addEventListener('click', function() {
+            // Trigger the actual form submission when the modal confirmation button is clicked
+            document.forms[0].submit();
+        });
+    </script>
+
 </body>
 
 </html>
