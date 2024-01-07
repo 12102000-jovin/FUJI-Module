@@ -44,6 +44,7 @@ if ($result && $result->num_rows > 0) {
     $role = $row['role'];
     $department = $row['department_name'];
     $full_name = $row['full_name'];
+    $profile_image = $row['profile_image'];
 
     // Set the employee_id value in session
     $_SESSION['employeeId'] = $employee_id;
@@ -163,12 +164,16 @@ $licenseQueryResult = $conn->query($licenseQuery);
                             <div class="d-flex justify-content-center mt-5">
                                 <div class="profile-container bg-gradient shadow-lg">
                                     <?php
-                                    $name_parts = explode(" ", $full_name);
-                                    $initials = "";
-                                    foreach ($name_parts as $part) {
-                                        $initials .= strtoupper(substr($part, 0, 1));
+                                    if ($profile_image) {
+                                        echo "<td><div class='profile-container bg-gradient shadow-lg'><img src='$profile_image' alt='Profile Image' class='profile-pic'></div></td>";
+                                    } else {
+                                        $name_parts = explode(" ", $full_name);
+                                        $initials = "";
+                                        foreach ($name_parts as $part) {
+                                            $initials .= strtoupper(substr($part, 0, 1));
+                                        }
+                                        echo $initials;
                                     }
-                                    echo $initials;
                                     ?>
                                 </div>
                             </div>
@@ -202,8 +207,6 @@ $licenseQueryResult = $conn->query($licenseQuery);
                                         $license_image = $row['license_image'];
                                 ?>
                                         <p><strong> <?php echo $license_name; ?> </strong></p>
-                                        <p><?php echo $license_number ?></p>
-                                        <img src="<?php echo $license_image; ?>" class="img-fluid" alt="Responsive image">
                                 <?php
                                     }
                                 } else {
@@ -271,6 +274,24 @@ $licenseQueryResult = $conn->query($licenseQuery);
     </div>
 
     <!-- ================================================================================== -->
+    <!-- Image Upload Modal -->
+    <div class="modal fade" id="imageUploadModal" tabindex="-1" role="dialog" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageUploadModalLabel">Upload Profile Picture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Form for image upload -->
+                    <form action="" method="post" enctype="multipart/form-data">
+                        <input type="file" name="profile_image" accept="image/*" class="form-control mb-3" required>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <?php require_once("footer_logout.php") ?>
 

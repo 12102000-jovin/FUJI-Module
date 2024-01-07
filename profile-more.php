@@ -25,7 +25,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 $employee_id = $_GET['employee_id'];
 
 // (Retrieve the employee ID, role, and department from the users table)
-$emp_id_query = "SELECT u.role, d.department_name, u.full_name FROM users u
+$emp_id_query = "SELECT u.role, d.department_name, u.full_name, u.profile_image FROM users u
     JOIN department d ON u.department_id = d.department_id
     WHERE u.employee_id = '$employee_id'";
 // Execute the SQL query and store the result in the $result variable
@@ -40,6 +40,8 @@ if ($result && $result->num_rows > 0) {
     $role = $row['role'];
     $department = $row['department_name'];
     $full_name = $row['full_name'];
+    $profile_image = $row['profile_image'];
+
 
     // Set the employee_id value in session
     $_SESSION['employeeId'] = $employee_id;
@@ -158,12 +160,16 @@ $licenseQueryResult = $conn->query($licenseQuery);
                             <div class="d-flex justify-content-center mt-5">
                                 <div class="profile-container bg-gradient shadow-lg">
                                     <?php
-                                    $name_parts = explode(" ", $full_name);
-                                    $initials = "";
-                                    foreach ($name_parts as $part) {
-                                        $initials .= strtoupper(substr($part, 0, 1));
+                                    if ($profile_image) {
+                                        echo "<td><div class='profile-container bg-gradient shadow-lg'><img src='$profile_image' alt='Profile Image' class='profile-pic'></div></td>";
+                                    } else {
+                                        $name_parts = explode(" ", $full_name);
+                                        $initials = "";
+                                        foreach ($name_parts as $part) {
+                                            $initials .= strtoupper(substr($part, 0, 1));
+                                        }
+                                        echo $initials;
                                     }
-                                    echo $initials;
                                     ?>
                                 </div>
                             </div>

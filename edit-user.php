@@ -1,6 +1,8 @@
 <?php
-// Start the session, to load all the Session Variables
-session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Connect to the database
 require_once("db_connect.php");
 // Checking the inactivity 
@@ -86,24 +88,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $updatedUsername = $_POST['username'];
     $updatedPassword = $_POST['password'];
     $updatedRole = $_POST['role'];
-    $selectedDepartment = $_POST['department']; // This is the department name now
-    $updatedEmployeeId = $_POST['employee_id']; // Capture the updated employee ID
+    $selectedDepartment = $_POST['department'];
+    $updatedEmployeeId = $_POST['employee_id'];
 
-    // Check if the updated employee_id already exists in the database
-    $existingEmployeeQuery = "SELECT employee_id FROM users WHERE employee_id = ?";
-    $existingStmt = $conn->prepare($existingEmployeeQuery);
-    $existingStmt->bind_param("i", $updatedEmployeeId);
-    $existingStmt->execute();
-    $existingResult = $existingStmt->get_result();
+    // Retrieve file information
+    $updatedProfileImage = $_FILES["profile_image"];
 
-    // If the employee_id already exists, show the modal
-    if ($existingResult->num_rows > 0) {
-        echo '<script>
+    // File paths
+    $imagePath = "./Images/" . basename($updatedProfileImage["name"]);
+
+    // Move uploaded files to the specified directories
+    move_uploaded_file($updatedProfileImage["tmp_name"], $imagePath);
+
+    if ($updatedEmployeeId !== $employee_id) {
+        // Check if the updated employee_id already exists in the database
+        $existingEmployeeQuery = "SELECT employee_id FROM users WHERE employee_id = ?";
+        $existingStmt = $conn->prepare($existingEmployeeQuery);
+        $existingStmt->bind_param("i", $updatedEmployeeId);
+        $existingStmt->execute();
+        $existingResult = $existingStmt->get_result();
+
+        // If the employee_id already exists, show the modal
+        if ($existingResult->num_rows > 0) {
+            echo '<script>
             window.addEventListener("load", function() {
                 var myModal = new bootstrap.Modal(document.getElementById("employeeIdExistsModal"));
                 myModal.show();
             });
         </script>';
+        }
     } else {
         // Get the department_id associated with the selected department_name
         $departmentIdQuery = "SELECT department_id FROM department WHERE department_name = ?";
@@ -118,11 +131,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Create a prepared statement to prevent SQL injection
             $updateSql = "UPDATE users 
-                            SET employee_id = ?, full_name = ?, username = ?, password = ?, role = ?, department_id = ? 
-                            WHERE employee_id = ?";
+                        SET employee_id = ?, full_name = ?, username = ?, password = ?, role = ?, department_id = ?, profile_image = ?
+                        WHERE employee_id = ?";
 
             $stmt = $conn->prepare($updateSql);
-            $stmt->bind_param("issssii", $updatedEmployeeId, $updatedFullName, $updatedUsername, $updatedPassword, $updatedRole, $updatedDepartmentId, $employee_id);
+            $stmt->bind_param("issssisi", $updatedEmployeeId, $updatedFullName, $updatedUsername, $updatedPassword, $updatedRole, $updatedDepartmentId, $imagePath, $employee_id);
 
             if ($stmt->execute()) {
                 $_SESSION["userUpdated"] = true;
@@ -160,6 +173,7 @@ $conn->close();
 
 <body class="d-flex flex-column min-vh-100">
 
+
     <?php require_once("nav-bar.php"); ?>
 
     <div class="wrapper d-flex flex-column justify-content-center align-items-center">
@@ -184,7 +198,7 @@ $conn->close();
             } else {
 
             ?>
-                <form method="post" id="updateUserForm" class="p-5 text-white rounded-3 shadow-lg bg-gradient signature-bg-color">
+                <form method="post" id="updateUserForm" class="p-5 text-white rounded-3 shadow-lg bg-gradient signature-bg-color" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="full_name" class="form-label" style="font-weight: bold;">Full Name</label>
                         <input type="text" class="form-control" id="full_name" name="full_name" value="<?php echo $full_name ?>" required>
@@ -210,7 +224,7 @@ $conn->close();
 
                     <div class="mb-3">
                         <label for="employee_id" class="form-label" style="font-weight: bold;">Employee ID</label>
-                        <input type="text" class="form-control" name="employee_id" value="<?php echo $employee_id ?>" required>
+                        <input type="text" class="form-control" name="employee_id" value="<?php echo $employee_id ?>" required readonly>
                         <div class="invalid-feedback">
                             Please provide the Employee ID.
                         </div>
@@ -245,6 +259,11 @@ $conn->close();
                                 Please provide the department.
                             </div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="profile_image" class="form-label" style="font-weight: bold;">Profile Image</label>
+                        <input type="file" class="form-control" name="profile_image">
                     </div>
 
                     <!-- Submit buttons -->

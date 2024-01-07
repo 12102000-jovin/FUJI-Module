@@ -51,7 +51,7 @@ $currentLicenseResult = $conn->query($currentLicenseSql);
 
 /* ================================================================================== */
 
-$employeeDetailSql = "SELECT u.employee_id, u.full_name, d.department_name
+$employeeDetailSql = "SELECT u.employee_id, u.full_name, d.department_name, u.profile_image
                         FROM users u
                         JOIN department d ON u.department_id = d.department_id
                         WHERE u.employee_id = $employee_id";
@@ -64,6 +64,7 @@ if ($employeeDetailResult->num_rows > 0) {
 
     $full_name = $employeeDetailData['full_name'];
     $department = $employeeDetailData['department_name'];
+    $profile_image = $employeeDetailData['profile_image'];
 } else {
     echo "No employee found with ID: " . $employee_id;
 }
@@ -300,12 +301,16 @@ $conn->close();
                             <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
                                 <div class="profile-container shadow-lg bg-gradient">
                                     <?php
-                                    $name_parts = explode(" ", $full_name);
-                                    $initials = "";
-                                    foreach ($name_parts as $part) {
-                                        $initials .= strtoupper(substr($part, 0, 1));
+                                    if ($profile_image) {
+                                        echo "<td><div class='profile-container bg-gradient shadow-lg'><img src='$profile_image' alt='Profile Image' class='profile-pic'></div></td>";
+                                    } else {
+                                        $name_parts = explode(" ", $full_name);
+                                        $initials = "";
+                                        foreach ($name_parts as $part) {
+                                            $initials .= strtoupper(substr($part, 0, 1));
+                                        }
+                                        echo $initials;
                                     }
-                                    echo $initials;
                                     ?>
                                 </div>
                                 <div class="mt-1 m-2">
@@ -351,13 +356,13 @@ $conn->close();
                                     <th>License Name</th>
                                     <th>Issue Date</th>
                                     <th>Expiration Date</th>
-                                    <th colspan="2"> Action</th>
+                                    <th colspan="3"> Action</th>
                                 </tr>
                             </thead>
                             <tbody class="align-middle">
                                 <?php if ($currentLicenseResult->num_rows > 0) {
                                     while ($row = $currentLicenseResult->fetch_assoc()) { ?>
-                                        <tr class="text-center" data-bs-toggle="modal" data-bs-target="#licenseImageModal">
+                                        <tr class="text-center">
                                             <td><img src=" <?php echo $row["license_image"] ?>" alt="<?php echo $row["license_image"]; ?>" class="img-fluid" style="max-height: 100px; max-width: 100px;">
                                             </td>
                                             <td><?php echo $row["license_number"]; ?></td>
@@ -366,7 +371,7 @@ $conn->close();
                                             <td class="no-wrap"><?php echo $row["expiration_date"]; ?></td>
                                             <td>
                                                 <a href="#" onclick="showEditModal(<?php echo $employee_id; ?>, <?php echo $row['license_id']; ?>, '<?php echo $row['issue_date']; ?>', '<?php echo $row['expiration_date']; ?>', '<?php echo $row['license_number']; ?>', '<?php echo $row['license_image']; ?>')">
-                                                    <i class="fa-regular fa-pen-to-square signature-color tooltips" data-toggle="tooltip" data-placement="top" title="Edit License Date"></i>
+                                                    <i class="fa-regular fa-pen-to-square signature-color tooltips" data-toggle="tooltip" data-placement="top" title="Edit License"></i>
                                                 </a>
                                             </td>
                                             <td>
@@ -374,11 +379,16 @@ $conn->close();
                                                     <i class="text-danger fa-regular fa-trash-can tooltips" data-toggle="tooltip" data-placement="top" title="Delete License"></i>
                                                 </a>
                                             </td>
+                                            <td>
+                                                <a href="#" onclick="showLicenseImage(<?php echo $employee_id; ?>, <?php echo $row['license_id'] ?>, '<?php echo $row['license_image'] ?>')">
+                                                    <i class="signature-color fa-regular fa-image tooltips" data-toggle="tooltip" data-placement="top" title="View License"></i>
+                                                </a>
+                                            </td>
                                         </tr>
                                     <?php }
                                 } else { ?>
                                     <tr>
-                                        <td colspan='5' class="text-center">No licenses found for this employee.</td>
+                                        <td colspan='6' class="text-center">No licenses found for this employee.</td>
                                     </tr>
                                 <?php } ?>
                             </tbody>
@@ -606,23 +616,23 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <!-- License Modal -->
-    <div class="modal fade" id="licenseImageModal" tabindex="-1" aria-labelledby="licenseImageModalLabel" aria-hidden="true" style="z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- Modal for displaying license image -->
+    <div class="modal fade" id="licenseImageModal" tabindex="-1" role="dialog" aria-labelledby="licenseImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="licenseImageModalLabel">License Details</h5>
+                    <h5 class="modal-title" id="licenseImageModalLabel">License Image</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div id="resultDetails"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div class="d-flex justify-content-center">
+                        <img id="modalLicenseImage" src="" alt="License Image" class="img-fluid">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
 
     <?php require_once("footer_logout.php") ?>
 
@@ -698,15 +708,10 @@ $conn->close();
     <script>
         // Function to show the confirmation modal
         function showDeleteConfirmation(employeeId, licenseId) {
-
-            $('#deleteConfirmationModal').on('click', function() {
-                $('#licenseImageModal').modal('hide');
-            });
-
             $('#deleteConfirmationModal').modal('show');
 
             // Add event listener to the confirm button
-            $('#confirmDelete').click(function() {
+            $('#confirmDelete').off('click').on('click', function() {
                 // Redirect to the delete script with proper parameters
                 window.location.href = `manage-license.php?employee_id=${employeeId}&license_id=${licenseId}&delete=true`;
             });
@@ -718,11 +723,7 @@ $conn->close();
     <!-- Modal to update the license details -->
     <script>
         // Function to show the edit modal and populate fields
-        function showEditModal(event, employeeId, licenseId, issueDate, expirationDate, licenseNumber, existingImagePath) {
-
-            $('#licenseImageModal').modal('hide');
-
-
+        function showEditModal(employeeId, licenseId, issueDate, expirationDate, licenseNumber, existingImagePath) {
             // Set the form fields in the edit modal
             $('#edit_issue_date').val(issueDate);
             $('#edit_expiration_date').val(expirationDate);
@@ -737,15 +738,25 @@ $conn->close();
         }
     </script>
 
+    <script>
+        function showLicenseImage(employeeId, licenseId, licenseImage) {
+            // Set the src attribute of the modalLicenseImage element
+            document.getElementById('modalLicenseImage').src = licenseImage;
+
+            // Show the modal
+            $('#licenseImageModal').modal('show');
+        }
+    </script>
+
     <!-- ==================================================================================  -->
     <!-- Modal to show the license details -->
-    <script>
+    <!-- <script>
         let licenseImageModal = document.getElementById('licenseImageModal');
         licenseImageModal.addEventListener('show.bs.modal', function(event) {
             let button = event.relatedTarget;
 
             // Check if the clicked element has the 'data-bs-toggle' attribute with a value of 'modal'
-            if (button && button.getAttribute('class') === 'modal') {
+            if (button && button.getAttribute('data-bs-toggle') === 'modal') {
                 // If the clicked element is the edit button, prevent the default behavior (opening the modal)
                 event.preventDefault();
             } else {
@@ -763,7 +774,8 @@ $conn->close();
             `;
             }
         });
-    </script>
+    </script> -->
+
 
 </body>
 

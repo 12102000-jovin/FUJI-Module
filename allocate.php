@@ -319,6 +319,7 @@ $conn->close();
                 echo '<table class="table table-hover table-striped mb-4 border">';
                 echo '<thead class="align-middle">';
                 echo '<tr class="text-center">';
+                echo '<th class="border">Profile</th>';
                 echo '<th class="border">Employee ID</th>';
                 echo '<th class="border">Username</th>';
                 echo '<th class="border">Full Name</th>';
@@ -336,10 +337,21 @@ $conn->close();
                     $full_name = $user['full_name'];
                     $department = $user['department_name'];
                     $roleTable = $user['role'];
+                    $profile_image = $user['profile_image'];
                     $capitaliseRole = ucwords($roleTable);
 
                     // Print the user details in a table row
                     echo '<tr class="text-center align-middle">';
+                    if ($profile_image) {
+                        echo "<td><div><img src='$profile_image' alt='Profile Image' class='profile-pic' style='max-width: 5vh'></div></td>";
+                    } else {
+                        $name_parts = explode(" ", $full_name);
+                        $initials = "";
+                        foreach ($name_parts as $part) {
+                            $initials .= strtoupper(substr($part, 0, 1));
+                        }
+                        echo "<td style='background-color: red; border-radius:50%'><strong > $initials </str</td>";
+                    }
                     echo "<td>$employee_id</td>";
                     echo "<td>$username</td>";
                     echo "<td>$full_name</td>";

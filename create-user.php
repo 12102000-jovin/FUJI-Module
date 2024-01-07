@@ -1,6 +1,8 @@
 <?php
-// Start the session, to load all the Session Variables
-session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Connect to the database
 require_once("db_connect.php");
 // Checking the inactivity 
@@ -56,6 +58,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $full_name = $_POST['full_name'];
     $selectedDepartmentId = $_POST['department'];
 
+    // Retrieve file information
+    $profileImage = $_FILES["profile_image"];
+
+    // File paths
+    $imagePath = "./Images/" . basename($profileImage["name"]);
+
+    // Move uploaded files to the specified directories
+    move_uploaded_file($profileImage["tmp_name"], $imagePath);
+
     // Check if the employee_id already exists in the database
     $checkExistingSql = "SELECT COUNT(*) AS count FROM users WHERE employee_id = ?";
     $checkStmt = $conn->prepare($checkExistingSql);
@@ -83,9 +94,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </script>';
     } else {
         // Insert the new user into the database
-        $createUserSql = "INSERT INTO users (username, role, employee_id, password, full_name, department_id) VALUES (?, ?, ?, ?, ?, ?)";
+        $createUserSql = "INSERT INTO users (username, role, employee_id, password, full_name, department_id, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($createUserSql);
-        $stmt->bind_param("ssissi", $username, $role, $employee_id, $password, $full_name, $selectedDepartmentId);
+        $stmt->bind_param("ssissis", $username, $role, $employee_id, $password, $full_name, $selectedDepartmentId, $imagePath);
 
         if ($stmt->execute()) {
             $_SESSION["userRegistered"] = true;
@@ -148,7 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             } else {
 
             ?>
-                <form method="post" id="createUserForm" class="p-5 text-white rounded-3 shadow-lg bg-gradient signature-bg-color">
+                <form method="post" id="createUserForm" class="p-5 text-white rounded-3 shadow-lg bg-gradient signature-bg-color" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="full_name" class="form-label" style="font-weight: bold;">Full Name</label>
                         <input type="text" class="form-control" id="full_name" name="full_name" value="<?php echo isset($_POST['full_name']) ? $_POST['full_name'] : ''; ?>" required>
@@ -209,6 +220,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 Please provide the department.
                             </div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="profile_image" class="form-label" style="font-weight: bold;">Profile Image</label>
+                        <input type="file" class="form-control" name="profile_image">
                     </div>
 
                     <!-- Submit buttons -->
