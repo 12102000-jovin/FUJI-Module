@@ -39,7 +39,7 @@ if (isset($_GET['employee_id'])) {
     $employee_id = $_GET['employee_id'];
 
     // Create a prepared statement to prevent SQL injection
-    $sql = "SELECT u.full_name, u.username, u.password, u.employee_id, u.role, d.department_name
+    $sql = "SELECT u.full_name, u.username, u.password, u.employee_id, u.role, d.department_name, u.profile_image
                 FROM users u
                 JOIN department d ON u.department_id = d.department_id
                 WHERE u.employee_id = ?";
@@ -56,12 +56,14 @@ if (isset($_GET['employee_id'])) {
         $password = $row['password'];
         $user_role = $row['role'];
         $department = $row['department_name'];
+        $profile_image = $row['profile_image'];
     } else {
         $full_name = "User Not Found";
         $username = "";
         $password = "";
         $user_role = "";
         $department = "";
+        $profile_image = "";
     }
 } else {
     echo "No employee_id";
@@ -91,14 +93,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $selectedDepartment = $_POST['department'];
     $updatedEmployeeId = $_POST['employee_id'];
 
+    // Get the current profile image path
+    $currentProfileImagePath = $row['profile_image'];
+
     // Retrieve file information
     $updatedProfileImage = $_FILES["profile_image"];
 
-    // File paths
-    $imagePath = "./Images/" . basename($updatedProfileImage["name"]);
+    // Check if a new image file is uploaded
+    if ($updatedProfileImage["size"] > 0) {
+        // New image file uploaded
+        $imagePath = "./Images/" . basename($updatedProfileImage["name"]);
 
-    // Move uploaded files to the specified directories
-    move_uploaded_file($updatedProfileImage["tmp_name"], $imagePath);
+        // Move uploaded files to the specified directories
+        move_uploaded_file($updatedProfileImage["tmp_name"], $imagePath);
+    } else {
+        // No new image uploaded, keep the existing image path
+        $imagePath = $row['profile_image'];
+    }
 
     if ($updatedEmployeeId !== $employee_id) {
         // Check if the updated employee_id already exists in the database

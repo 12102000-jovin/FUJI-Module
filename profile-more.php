@@ -61,17 +61,34 @@ $result->free();
 // Retrieve modules from the 'modules' table that have been attempted by the user along with the highest score
 // Query to retrieve attempted modules and their scores for a specific employee
 $attemptedModulesQuery = "
-    SELECT m.module_id, m.module_name, m.module_description, m.module_image, r.score
-    FROM modules m
-    JOIN results r ON m.module_id = r.module_id
-    JOIN (
-        SELECT module_id, MAX(score) AS max_score
-        FROM results
-        WHERE employee_id = '$employee_id'
-        GROUP BY module_id
-    ) t ON r.module_id = t.module_id AND r.score = t.max_score
-    WHERE m.is_archived = '0' AND r.employee_id = '$employee_id'
-    ORDER BY m.module_id
+SELECT 
+ma.module_id, 
+m.module_name, 
+m.module_description, 
+m.module_image, 
+r.score,
+COALESCE(MAX(r.score), wa.written_answer) AS result_or_written_answer
+FROM 
+module_allocation ma
+JOIN 
+modules m ON ma.module_id = m.module_id
+LEFT JOIN 
+results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
+LEFT JOIN (
+SELECT module_id, MAX(score) AS max_score
+FROM results
+WHERE employee_id = '$employee_id'
+GROUP BY module_id
+) t ON r.module_id = t.module_id AND r.score = t.max_score
+LEFT JOIN 
+written_answers wa ON ma.module_id = wa.module_id AND ma.employee_id = wa.employee_id
+WHERE 
+m.is_archived = '0' 
+AND (r.employee_id = '$employee_id' OR wa.employee_id = '$employee_id')
+GROUP BY 
+ma.module_id, m.module_name, m.module_description, m.module_image
+ORDER BY 
+ma.module_id;
     ";
 $attemptedModulesResult = $conn->query($attemptedModulesQuery);
 
@@ -242,10 +259,17 @@ $licenseQueryResult = $conn->query($licenseQuery);
                                                     <div class="col-md-8">
                                                         <div class="card-body">
                                                             <h5 class="card-title"><?php echo $module_name; ?></h5>
-                                                            <p class="card-text">Highest Score: <?php echo $module_score; ?>%</p>
-                                                            <div class="progress" style="height: 5px">
-                                                                <div class="progress-bar signature-bg-color" role="progressbar" style="width: <?php echo $highestScores[$module_id]; ?>%;" aria-valuenow="<?php echo $highestScores[$module_id]; ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                                                            </div>
+                                                            <?php
+                                                            if ($module_score !== null) {
+                                                                echo " <p class='card-text'>Highest MCQ Score: $module_score%</p>
+                                                                <div class='progress' style='height: 5px'>
+                                                                <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]%;' aria-valuenow='<?php echo $highestScores[$module_id]; ?>' aria-valuemin='0' aria-valuemax='100'></div>
+                                                            </div>";
+                                                            } else {
+                                                                echo "<a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none'> Essay Attempted </a>";
+                                                            }
+                                                            ?>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -270,6 +294,13 @@ $licenseQueryResult = $conn->query($licenseQuery);
     <?php require_once("footer_logout.php") ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enabling the tooltip
+        const tooltips = document.querySelectorAll('.tooltips');
+        tooltips.forEach(t => {
+            new bootstrap.Tooltip(t)
+        })
+    </script>
 </body>
 
 </html>

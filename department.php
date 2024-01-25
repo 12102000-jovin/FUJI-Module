@@ -188,7 +188,6 @@ $conn->close();
                 <table class="table table-striped table-hover border text-center mt-3">
                     <thead class="align-middle">
                         <tr>
-                            <th style="width: 15vw">Department ID</th>
                             <th>Department Name</th>
                             <th>Action</th>
                         </tr>
@@ -199,7 +198,6 @@ $conn->close();
                             // Output data of each row
                             while ($row = $allDepartmentResult->fetch_assoc()) { ?>
                                 <tr>
-                                    <td> <?php echo $row['department_id'] ?> </td>
                                     <td> <?php echo $row['department_name'] ?> </td>
                                     <td>
                                         <a data-department-id="<?php echo $row['department_id'] ?>" data-department-name="<?php echo $row['department_name'] ?>">

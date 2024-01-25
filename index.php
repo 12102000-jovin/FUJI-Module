@@ -511,9 +511,19 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   <strong>Current Status</strong>
                 </div>
                 <div class="d-flex justify-content-between mt-auto m-3 mb-3">
-                  <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") . "Unmarked Questions: $unmarkedCount"; ?>">
-                    Essay
-                  </button>
+                  <?php
+                  // var_dump($countForModule);
+                  // var_dump($unmarkedCount);
+                  if ($countForModule === "0" && $unmarkedCount === "0") {
+                    echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Essay</button>';
+                  } else {
+                    echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
+                      ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") .
+                      "Unmarked Questions: $unmarkedCount" . '">
+        Essay
+    </button>';
+                  }
+                  ?>
 
                   <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($highestScores[$moduleId] !== null ? "Highest MCQ Score: $highestScores[$moduleId]" . "%" : "No Attempt") ?>">
                     MCQ

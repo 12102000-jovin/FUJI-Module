@@ -350,7 +350,7 @@ $conn->close();
                         foreach ($name_parts as $part) {
                             $initials .= strtoupper(substr($part, 0, 1));
                         }
-                        echo "<td style='background-color: red; border-radius:50%'><strong > $initials </str</td>";
+                        echo "<td><strong > $initials </str</td>";
                     }
                     echo "<td>$employee_id</td>";
                     echo "<td>$username</td>";
