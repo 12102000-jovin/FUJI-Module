@@ -105,6 +105,30 @@ $licenseQuery = "
     ";
 $licenseQueryResult = $conn->query($licenseQuery);
 
+function getCountForModule($conn, $moduleId, $employeeId)
+{
+    // Count the number of records for the current module and employee in written_results
+    $countQuery = "SELECT COUNT(*) AS result_count FROM written_answers WHERE module_id = $moduleId AND employee_id = $employeeId";
+    $countResult = $conn->query($countQuery);
+
+    if ($countResult) {
+        $countRow = $countResult->fetch_assoc();
+        $resultCount = $countRow['result_count'];
+
+        // Free up the memory used by the count result set
+        $countResult->free();
+
+        // Return the count value (even if it's 0)
+        return $resultCount;
+    } else {
+        // Display an error message if the count query fails
+        echo "Error executing the count query: " . $conn->error;
+    }
+
+    return null;
+}
+
+
 ?>
 
 <!-- ================================================================================== -->
@@ -265,13 +289,27 @@ $licenseQueryResult = $conn->query($licenseQuery);
                                                         <div class="card-body">
                                                             <h5 class="card-title"><?php echo $module_name; ?></h5>
                                                             <?php
-                                                            if ($module_score !== null) {
-                                                                echo " <p class='card-text'>Highest MCQ Score: $module_score%</p>
-                                                                <div class='progress' style='height: 5px'>
-                                                                <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]; ?>%;' aria-valuenow='<?php echo $highestScores[$module_id]; ?>' aria-valuemin='0' aria-valuemax='100'></div>
-                                                            </div>";
-                                                            } else {
-                                                                echo "<a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none'> Essay Attempted </a>";
+
+                                                            // Get the count for the current module
+                                                            $countForModule = getCountForModule($conn, $module_id, $employee_id);
+
+
+                                                            if ($module_score !== null && $countForModule > 0) {
+                                                                // Both MCQ score and essay attempted
+                                                                echo "<p class='card-text' style='margin-bottom: 0;'>Highest MCQ Score: $module_score%</p>
+                                                                <div class='progress' style='height: 5px; margin-bottom: 10px;'>
+                                                                  <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]%;' aria-valuenow='$highestScores[$module_id]' aria-valuemin='0' aria-valuemax='100'></div>
+                                                                </div>
+                                                                <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Essay Attempted</a>";
+                                                            } elseif ($countForModule > 0) {
+                                                                // Essay attempted but no MCQ score
+                                                                echo "<a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none'>Essay Attempted</a>";
+                                                            } elseif ($module_score !== null) {
+                                                                // MCQ score but no essay attempted
+                                                                echo "<p class='card-text' style='margin-bottom: 0;'>Highest MCQ Score: $module_score%</p>
+                                                                      <div class='progress' style='height: 5px'>
+                                                                        <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]%;' aria-valuenow='$highestScores[$module_id]' aria-valuemin='0' aria-valuemax='100'></div>
+                                                                      </div>";
                                                             }
                                                             ?>
                                                         </div>
