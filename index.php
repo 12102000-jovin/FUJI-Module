@@ -1,7 +1,5 @@
 <?php
 
-
-
 // Connect to the database
 require_once("db_connect.php");
 // Checking the inactivity 
@@ -68,21 +66,28 @@ $result->free();
 
 // Retrieve modules from the 'modules' table that is not archived
 $modulesQuery = "
-    SELECT 
-        m.module_id, 
-        m.module_name, 
-        m.module_description, 
-        m.module_image, 
-        IFNULL(MAX(r.score), 0) AS score,
-        IFNULL(MAX(wr.is_correct), 0) AS is_correct
-    FROM modules m
-    LEFT JOIN results r ON m.module_id = r.module_id AND r.employee_id = '$employee_id'
-    LEFT JOIN module_allocation ma ON m.module_id = ma.module_id AND ma.employee_id = '$employee_id'
-    LEFT JOIN written_results wr ON m.module_id = wr.module_id AND wr.employee_id = '$employee_id'
-    WHERE m.is_archived = '0' AND ma.module_id IS NOT NULL
-    GROUP BY m.module_id, m.module_name, m.module_description, m.module_image
-    ORDER BY m.module_id;
+  SELECT 
+    m.module_id, 
+    m.module_name, 
+    m.module_description, 
+    m.module_image, 
+    IFNULL(r.max_score, 0) AS score,
+    IFNULL(MAX(wr.is_correct), 0) AS is_correct
+  FROM modules m
+  LEFT JOIN (
+    SELECT module_id, MAX(score) AS max_score
+    FROM results
+    WHERE employee_id = '$employee_id'
+    GROUP BY module_id
+  ) r ON m.module_id = r.module_id
+  LEFT JOIN module_allocation ma ON m.module_id = ma.module_id AND ma.employee_id = '$employee_id'
+  LEFT JOIN written_results wr ON m.module_id = wr.module_id AND wr.employee_id = '$employee_id'
+  WHERE m.is_archived = '0' AND ma.module_id IS NOT NULL
+  GROUP BY m.module_id, m.module_name, m.module_description, m.module_image
+  ORDER BY m.module_id;
 ";
+
+
 
 // Execute the SQL query and store the result set in $moduleResult
 $modulesResult = $conn->query($modulesQuery);
@@ -329,7 +334,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
           <div class="col-12">
             <hr>
             <div class="d-flex justify-content-between align-items-center">
-              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold"> Not Completed Modules</h3>
+              <h3 style="font-size: 2.5vh; margin: 0;" class="fw-bold"> Not Attempted Modules</h3>
               <?php if ($numUnattemptedModules > 3) : ?>
                 <i class="fa-solid fa-arrows-left-right-to-line fa-fade fa-xl " id="menu-icon"></i>
               <?php elseif ($numUnattemptedModules != 1) : ?>
@@ -652,13 +657,22 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <strong>Current Status</strong>
               </div>
               <div class="d-flex justify-content-between mt-auto m-3 mb-3">
-                <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") . "Unmarked Questions: $unmarkedCount"; ?>">
-                  Essay
-                </button>
+                <?php
+                // var_dump($countForModule);
+                // var_dump($unmarkedCount);
+                if ($countForModule === "0" && $unmarkedCount === "0") {
+                  echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Essay</button>';
+                } else {
+                  echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
+                    ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") .
+                    "Unmarked Questions: $unmarkedCount" . '">
+        Essay
+    </button>';
+                }
+                ?>
+
                 <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($highestScores[$moduleId] !== null ? "Highest MCQ Score: $highestScores[$moduleId]" . "%" : "No Attempt") ?>">
                   MCQ
-                  <!-- <?php echo $highestScores[$moduleId] ?> -->
-                  <!-- <?php echo $moduleId ?> -->
                 </button>
               </div>
             </div>
