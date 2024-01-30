@@ -112,7 +112,7 @@ $conn->close();
 
     </div>
 
-    <div class="container wrapper d-flex flex-column align-items-center">
+    <div class="container wrapper d-flex flex-column align-items-center mb-5">
         <h1 class="text-center mb-3"><strong> Create Module </strong></h1>
 
         <?php

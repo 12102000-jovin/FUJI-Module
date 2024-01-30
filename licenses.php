@@ -155,7 +155,6 @@ if (isset($_GET['delete_license'])) {
             <table class="table table-striped table-hover border">
                 <thead class="text-center">
                     <tr>
-                        <th>License Id</th>
                         <th>License Name</th>
                         <th>Actions</th>
                     </tr>
@@ -166,7 +165,6 @@ if (isset($_GET['delete_license'])) {
                         // Output data of each row
                         while ($row = $select_license_result->fetch_assoc()) {
                             echo "<tr>";
-                            echo "<td style='width: 16vw'>" . $row["license_id"] . "</td>";
                             echo "<td>" . $row["license_name"] . "</td>";
                             echo '<td> 
                                         <a data-license-name="' . $row["license_name"] . '" data-license-id="' . $row["license_id"] . '"> 

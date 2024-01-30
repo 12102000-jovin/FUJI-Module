@@ -87,8 +87,6 @@ $modulesQuery = "
   ORDER BY m.module_id;
 ";
 
-
-
 // Execute the SQL query and store the result set in $moduleResult
 $modulesResult = $conn->query($modulesQuery);
 
@@ -380,9 +378,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                     <?php
                     // Show "To-Do" badge
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                                <span style="font-size: 8px">To-Do</span>
-                              </span>';
-
+                            <span style="font-size: 8px">To-Do</span>
+                          </span>';
                     ?>
                   </div>
                 </div>
@@ -408,7 +405,6 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
     if ($attemptedModulesResult && $attemptedModulesResult->num_rows > 0) {
       // Count the number of attempted modules
       $numAttemptedModules = $attemptedModulesResult->num_rows;
-
       // echo 'number of modules: ' .  $numAttemptedModules;
     ?>
       <div class="container mt-5">
@@ -443,7 +439,6 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
 
             // Output the count for the current module
             // echo "Number of False answer:  $countForModule <br><br>";
-
 
             // Example usage
             $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
@@ -525,8 +520,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                     echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
                       ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") .
                       "Unmarked Questions: $unmarkedCount" . '">
-        Essay
-    </button>';
+                          Essay
+                      </button>';
                   }
                   ?>
 
@@ -585,19 +580,15 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
           $moduleImage = $moduleRow['module_image'];
           $moduleScore = $moduleRow['score'];
 
-
           // Get the count for the current module
           $countForModule = getCountForModule($conn, $moduleId, $employee_id);
 
           // Output the count for the current module
           // echo "Number of False answer:  $countForModule <br><br>";
 
-
           // Example usage
           $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
           // echo "Number of unmarked questions: $unmarkedCount";
-
-
 
           // Limit the description to a maximum of 100 character
           $maxCharacters = 100;
@@ -666,8 +657,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
                     ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") .
                     "Unmarked Questions: $unmarkedCount" . '">
-        Essay
-    </button>';
+                      Essay
+                  </button>';
                 }
                 ?>
 
@@ -678,10 +669,6 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
             </div>
           </div>
       </div>
-
-
-
-
   <?php
         }
       } else {
@@ -702,7 +689,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
     <div class="mt-5"></div>
 
     <div class="d-flex justify-content-center align-items-center fixed-center-right">
-      <button class="btn btn-dark btn-sm" type="button" data-bs-toggle="offcanvas" id="offCanvasBtn" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="font-size: 10px"><i class="fa-solid fa-caret-left"></i> <strong> Badge Status </strong></button>
+      <button class="btn btn-dark btn-sm" type="button" data-bs-toggle="offcanvas" id="offCanvasBtn" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="font-size: 10px"><i class="fa-solid fa-caret-left fa-fade"></i> <strong> Badge Status </strong></button>
     </div>
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel" style="width: 50%;">
@@ -726,7 +713,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "To-Do" badge indicates that the module is unattempted and the module has less than 100% score in the Multiple Choice Question (MCQ) section
+                    <p style="text-align: justify">The "To-Do" badge indicates that the module is unattempted or the module has less than 100% score in the Multiple Choice Question (MCQ) section
                       and has false or unmarked answers in the essay section.</p>
                   </div>
                 </div>
