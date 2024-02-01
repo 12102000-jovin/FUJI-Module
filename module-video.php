@@ -59,7 +59,7 @@ $conn->close();
     <div class="text-white mt-5 p-3 bg-gradient signature-bg-color shadow">
         <div class="row justify-content-center">
             <div class="col-12 col-md-6 text-center">
-                <h1 class="c" style="font-size:4vh">This is <?php echo $moduleData['module_name']; ?> Module</h1>
+                <h1 class="c" style="font-size:4vh"><?php echo $moduleData['module_name']; ?> Module</h1>
             </div>
         </div>
         <div class="container">

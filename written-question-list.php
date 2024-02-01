@@ -359,7 +359,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
                                                 <td class="text-center">
                                                     <?php
                                                     // Assuming you want to limit the text to 50 characters
-                                                    $max_length = 4;
+                                                    $max_length = 15;
                                                     $written_answer = $row["written_answer"];
 
                                                     // Check if the length of $written_answer is greater than $max_length

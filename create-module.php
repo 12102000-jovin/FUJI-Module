@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Execute the statement
     if ($stmt->execute()) {
         // echo "Module created successfully";
-        session_start();
+
         // Get the generated module ID
         $moduleId = $stmt->insert_id;
 

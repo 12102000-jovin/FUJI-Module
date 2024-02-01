@@ -87,6 +87,8 @@ $modulesQuery = "
   ORDER BY m.module_id;
 ";
 
+
+
 // Execute the SQL query and store the result set in $moduleResult
 $modulesResult = $conn->query($modulesQuery);
 
@@ -155,6 +157,29 @@ function getUnmarkedQuestionCount($conn, $moduleId, $employeeId)
 
   // Return the count of unmarked questions
   return $row['unmarked_count'];
+}
+
+function getCountForEssayModule($conn, $moduleId, $employeeId)
+{
+  // Count the number of records for the current module and employee in written_results
+  $countQuery = "SELECT COUNT(*) AS result_count FROM written_answers WHERE module_id = $moduleId AND employee_id = $employeeId";
+  $countResult = $conn->query($countQuery);
+
+  if ($countResult) {
+    $countRow = $countResult->fetch_assoc();
+    $resultCount = $countRow['result_count'];
+
+    // Free up the memory used by the count result set
+    $countResult->free();
+
+    // Return the count value (even if it's 0)
+    return $resultCount;
+  } else {
+    // Display an error message if the count query fails
+    echo "Error executing the count query: " . $conn->error;
+  }
+
+  return null;
 }
 
 
@@ -378,8 +403,9 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                     <?php
                     // Show "To-Do" badge
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                            <span style="font-size: 8px">To-Do</span>
-                          </span>';
+                                <span style="font-size: 8px">To-Do</span>
+                              </span>';
+
                     ?>
                   </div>
                 </div>
@@ -405,6 +431,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
     if ($attemptedModulesResult && $attemptedModulesResult->num_rows > 0) {
       // Count the number of attempted modules
       $numAttemptedModules = $attemptedModulesResult->num_rows;
+
       // echo 'number of modules: ' .  $numAttemptedModules;
     ?>
       <div class="container mt-5">
@@ -439,6 +466,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
 
             // Output the count for the current module
             // echo "Number of False answer:  $countForModule <br><br>";
+
 
             // Example usage
             $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
@@ -518,10 +546,11 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                     echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Essay</button>';
                   } else {
                     echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
-                      ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") .
-                      "Unmarked Questions: $unmarkedCount" . '">
-                          Essay
-                      </button>';
+                      (($countForModule !== null || $unmarkedCount > 0) ?
+                        ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") . "Unmarked Questions: $unmarkedCount" :
+                        "No Attempt") . '">
+                        Essay
+                    </button>';
                   }
                   ?>
 
@@ -651,14 +680,16 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <?php
                 // var_dump($countForModule);
                 // var_dump($unmarkedCount);
+
                 if ($countForModule === "0" && $unmarkedCount === "0") {
                   echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Essay</button>';
                 } else {
                   echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
-                    ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No Attempt" . "\n") .
-                    "Unmarked Questions: $unmarkedCount" . '">
-                      Essay
-                  </button>';
+                    (($countForModule !== null || $unmarkedCount > 0) ?
+                      ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") . "Unmarked Questions: $unmarkedCount" :
+                      "No Attempt") . '">
+                        Essay
+                    </button>';
                 }
                 ?>
 
