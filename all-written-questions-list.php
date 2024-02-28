@@ -120,7 +120,7 @@ if (isset($_POST['add_question'])) {
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <title>Essay Questions</title>
+    <title>Short Answer Questions</title>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -132,7 +132,7 @@ if (isset($_POST['add_question'])) {
         </div>
 
         <div class="text-center mb-3">
-            <h1> <strong>Essay Questions</strong></h1>
+            <h1> <strong>Short Answer Questions</strong></h1>
             <p>Module: <strong> <?php echo $module_name ?> </strong></p>
             <a data-bs-toggle='modal' data-bs-target='#addQuestionModal' type="button" class="btn btn-dark addQuestionBtn ">+ Add Question</a>
         </div>

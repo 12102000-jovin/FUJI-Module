@@ -67,6 +67,19 @@ if ($result->num_rows > 0) {
 
 // ==================================================================================
 
+// Fetch data from the module_questions table
+$totalQuestionsPerModule = array();
+$sqlTotalQuestions = "SELECT module_id, COUNT(*) as total_questions FROM module_questions GROUP BY module_id";
+$resultTotalQuestions = $conn->query($sqlTotalQuestions);
+if ($resultTotalQuestions->num_rows > 0) {
+    while ($rowTotalQuestions = $resultTotalQuestions->fetch_assoc()) {
+        $totalQuestionsPerModule[$rowTotalQuestions['module_id']] = $rowTotalQuestions['total_questions'];
+    }
+}
+
+
+// ==================================================================================
+
 // Fetch data from the results table with search condition
 $results = array();
 $tries = array();
@@ -87,8 +100,7 @@ $sql = "SELECT r.*, m.module_name
     OR r.score LIKE '%$escapedSearchTerm%'
     OR r.duration LIKE '%$escapedSearchTerm'
     OR m.module_name LIKE '%$escapedSearchTerm%'
-    OR u.full_name LIKE '%$escapedSearchTerm%'
-    OR u.role LIKE '%$escapedSearchTerm%')
+    OR u.full_name LIKE '%$escapedSearchTerm%')
     " . ($date ? "AND DATE(r.timestamp) = '$formattedDate'" : "") . "
     ORDER BY r.timestamp DESC  
     LIMIT $offset, $recordsPerPage";
@@ -100,8 +112,7 @@ $countQuery = "SELECT COUNT(*) AS total FROM results r
     WHERE (r.module_id LIKE '%$escapedSearchTerm%'
     OR r.score LIKE '%$escapedSearchTerm%'
     OR m.module_name LIKE '%$escapedSearchTerm%'
-    OR u.full_name LIKE '%$escapedSearchTerm%'
-    OR u.role LIKE '%$escapedSearchTerm%')
+    OR u.full_name LIKE '%$escapedSearchTerm%')
     " . ($date ? "AND DATE(r.timestamp) = '$formattedDate'" : "");
 
 $countResult = $conn->query($countQuery);
@@ -132,6 +143,57 @@ if ($result->num_rows > 0) {
             $tries[$employeeId][$moduleId] = 1;
         }
     }
+}
+
+// Fetch all data without pagination (for CSV export)
+$sqlExport = "SELECT r.*, m.module_name, u.full_name
+    FROM results r
+    JOIN modules m ON r.module_id = m.module_id
+    JOIN users u ON r.employee_id = u.employee_id
+    WHERE (r.module_id LIKE '%$escapedSearchTerm%'
+    OR r.score LIKE '%$escapedSearchTerm%'
+    OR r.duration LIKE '%$escapedSearchTerm'
+    OR m.module_name LIKE '%$escapedSearchTerm%'
+    OR u.full_name LIKE '%$escapedSearchTerm%')
+    " . ($date ? "AND DATE(r.timestamp) = '$formattedDate'" : "") . "
+    ORDER BY r.timestamp DESC";
+
+$exportResult = $conn->query($sqlExport);
+
+// Check if the CSV export is requested
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    // Output headers
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="exported_results.csv"');
+
+    // Create a file pointer connected to the output stream
+    $output = fopen('php://output', 'w');
+
+    // Fetch the first row (headers) and output it
+    if ($exportResult->num_rows > 0) {
+        $header = $exportResult->fetch_assoc();
+        fputcsv($output, array_keys($header));
+
+        // Output data
+        do {
+            // Modify the score to match the HTML format
+            $moduleTotalQuestions = isset($totalQuestionsPerModule[$header['module_id']]) ? $totalQuestionsPerModule[$header['module_id']] : 0;
+            $correctAnswers = round(($moduleTotalQuestions * $header['score']) / 100, 0);
+            $score = $correctAnswers . " out of " . $moduleTotalQuestions;
+
+            // Replace the 'score' field with the modified score
+            $header['score'] = $score;
+
+            // Output the modified row
+            fputcsv($output, $header);
+        } while ($header = $exportResult->fetch_assoc());
+    }
+
+    // Close the file pointer
+    fclose($output);
+
+    $conn->close();
+    exit(); // Exit to prevent the HTML content from being displayed
 }
 
 $conn->close();
@@ -264,34 +326,58 @@ $conn->close();
                             <th>Full Name</th>
                             <th>Score</th>
                             <th>Date</th>
-                            <th>Duration</th>
+                            <!-- <th>Duration</th> -->
                             <th>View</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle">
                         <?php
                         foreach ($results as $result) {
+
+                            // Get the total number of questions for the current module
+                            $moduleTotalQuestions = isset($totalQuestionsPerModule[$result['module_id']]) ? $totalQuestionsPerModule[$result['module_id']] : 0;
+
+                            // Calculate the percentage of correct answers
+                            $score = $result['score'];
+                            $correctAnswers = round(($moduleTotalQuestions * $score) / 100, 0);
+
+
                             echo "<tr data-bs-toggle='modal' data-bs-target='#resultModal'>";
                             echo "<td>" . $result['module_name'] . "</td>";
                             echo "<td class='text-center align-middle'>" . $users[$result['employee_id']]['employee_id'] . "</td>";
                             echo "<td class='text-center align-middle'>" . $users[$result['employee_id']]['full_name'] . "</td>";
-                            echo "<td class='text-center align-middle'>" . $result['score'] . "</td>";
+                            if ($correctAnswers == $moduleTotalQuestions) {
+                                // If all answers are correct, use green badge
+                                echo "<td class='text-center align-middle'>
+                                        <div class='d-flex justify-content-center align-items-center'>
+                                            <span class='badge rounded-pill bg-success'>" . $correctAnswers . " out of " . $moduleTotalQuestions . "</span>
+                                        </div>
+                                      </td>";
+                            } else {
+                                // For other cases, use red badge
+                                echo "<td class='text-center align-middle'>
+                                        <div class='d-flex justify-content-center align-items-center'>
+                                            <span class='badge rounded-pill bg-danger'>" . $correctAnswers . " out of " . $moduleTotalQuestions . "</span>
+                                        </div>
+                                      </td>";
+                            }
+
                             echo "<td class='text-center align-middle'>" . date("Y-m-d", strtotime($result['timestamp'])) . "</td>"; // Display only the date
 
-                            // Calculate the elapsed time in minutes and seconds
-                            $durationMinutes = floor($result['duration'] / 60);
-                            $durationSeconds = $result['duration'] % 60;
+                            // // Calculate the elapsed time in minutes and seconds
+                            // $durationMinutes = floor($result['duration'] / 60);
+                            // $durationSeconds = $result['duration'] % 60;
 
-                            // Format and display the elapsed time
-                            $formattedDuration = "$durationMinutes" . "m " . "$durationSeconds" . "s";
+                            // // Format and display the elapsed time
+                            // $formattedDuration = "$durationMinutes" . "m " . "$durationSeconds" . "s";
 
-                            if ($durationMinutes == 0 && $durationSeconds > 0) {
-                                echo "<td class='text-center align-middle'>" . $durationSeconds . "s" . "</td>";
-                            } else if ($durationMinutes > 0 && $durationSeconds > 0) {
-                                echo "<td class='text-center align-middle'>" . $formattedDuration  . "</td>";
-                            } else if ($durationMinutes > 0 && $durationSeconds == 0) {
-                                echo "<td class='text-center align-middle'>" . $durationMinutes . "m" . "</td>";
-                            }
+                            // if ($durationMinutes == 0 && $durationSeconds > 0) {
+                            //     echo "<td class='text-center align-middle'>" . $durationSeconds . "s" . "</td>";
+                            // } else if ($durationMinutes > 0 && $durationSeconds > 0) {
+                            //     echo "<td class='text-center align-middle'>" . $formattedDuration  . "</td>";
+                            // } else if ($durationMinutes > 0 && $durationSeconds == 0) {
+                            //     echo "<td class='text-center align-middle'>" . $durationMinutes . "m" . "</td>";
+                            // }
 
                             echo "<td class='text-center align-middle'><a href='result-details.php?result_id=" . $result['result_id'] . "'><i class='fa-regular fa-rectangle-list signature-color tooltips data-bs-toggle='tooltip' data-bs-placement='top' title='See Answers'></i></a></td>";
                             echo "</tr>";
@@ -303,15 +389,14 @@ $conn->close();
                     </tbody>
                 </table>
             </div>
-
             <div class="d-flex justify-content-end">
-                <button class="btn signature-btn mb-2" onclick="exportResultsToCSV()">Export to CSV</button>
+                <a href="?export=csv" class="btn signature-btn mb-2">Export to CSV</a>
             </div>
 
-            <div class="mt-5 text-center">
+            <!-- <div class="mt-5 text-center">
                 <h6><strong>User Attempt History</strong></h6>
-            </div>
-
+            </div> -->
+            <!-- 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover" id="triesTable">
                     <thead class="align-middle text-center">
@@ -339,11 +424,11 @@ $conn->close();
                         ?>
                     </tbody>
                 </table>
-            </div>
+            </div> -->
 
             <div class="d-flex justify-content-end">
-                <button class="btn btn-secondary m-1 mb-2" onclick="window.print()"> <i class="fa-solid fa-print"></i> Print</button>
-                <button class="btn signature-btn m-1 mb-2" onclick="exportTriesToCSV()">Export to CSV</button>
+                <!-- <button class="btn btn-secondary m-1 mb-2" onclick="window.print()"> <i class="fa-solid fa-print"></i> Print</button> -->
+                <!-- <button class="btn signature-btn m-1 mb-2" onclick="exportTriesToCSV()">Export to CSV</button> -->
             </div>
 
             <div class="d-flex justify-content-center">

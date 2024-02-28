@@ -134,35 +134,35 @@ mysqli_close($conn);
                 </div>
                 <div class="mb-3">
                     <label for="option1" class="form-label" style="font-weight: bold;">Option 1</label>
-                    <input type="text" class="form-control" id="option1" name="option1[]" required value="<?php echo $option1; ?>">
+                    <textarea class="form-control" id="option1" name="option1[]" required><?php echo $option1; ?></textarea>
                     <div class="invalid-feedback">
                         Please provide Option 1.
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="option2" class="form-label" style="font-weight: bold;">Option 2</label>
-                    <input type="text" class="form-control" id="option2" name="option2[]" required value="<?php echo $option2; ?>">
+                    <textarea type="text" class="form-control" id="option2" name="option2[]" required><?php echo $option2; ?></textarea>
                     <div class="invalid-feedback">
                         Please provide Option 2.
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="option3" class="form-label" style="font-weight: bold;">Option 3</label>
-                    <input type="text" class="form-control" id="option3" name="option3[]" required value="<?php echo $option3; ?>">
+                    <textarea type="text" class="form-control" id="option3" name="option3[]" required><?php echo $option3; ?></textarea>
                     <div class="invalid-feedback">
                         Please provide Option 3.
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="option4" class="form-label" style="font-weight: bold;">Option 4</label>
-                    <input type="text" class="form-control" id="option4" name="option4[]" required value="<?php echo $option4; ?>">
+                    <textarea type="text" class="form-control" id="option4" name="option4[]" required><?php echo $option4; ?></textarea>
                     <div class="invalid-feedback">
                         Please provide Option 4.
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="correctAnswer" class="form-label" style="font-weight: bold;">Correct Answer</label>
-                    <input type="text" class="form-control" id="correctAnswer" name="correctAnswer[]" required value="<?php echo $correctAnswer; ?>">
+                    <textarea type="text" class="form-control" id="correctAnswer" name="correctAnswer[]" required><?php echo $correctAnswer; ?></textarea>
                     <div class="invalid-feedback">
                         Please provide the correct answer for the question.
                     </div>
@@ -170,6 +170,7 @@ mysqli_close($conn);
 
                 <!-- Submit buttons -->
                 <div class="text-center mt-3">
+                    <a href="edit-questions.php?module_id=<?php echo $moduleId ?>" role="button" class="btn btn-secondary mr-3">Back to Dashboard</a>
                     <a href="#myModal" role="button" id="updateQuestionBtn" class="btn btn-dark">Update Question</a>
                 </div>
 

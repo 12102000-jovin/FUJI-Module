@@ -35,6 +35,7 @@ wr.grader_id,
 u_employee.full_name AS employee_full_name,
 wr.graded_at,
 wr.is_correct,
+wa.written_answer,
 u_grader.employee_id AS grader_employee_id,
 u_grader.full_name AS grader_full_name,
 wq.question
@@ -50,9 +51,9 @@ JOIN
 written_questions wq ON wa.written_question_id = wq.written_question_id
 WHERE
 wa.module_id = $module_id
-AND wr.employee_id = $employee_id;
+AND wr.employee_id = $employee_id
+AND wa.is_marked = 1";
 
-";
 
 $selectResult = $conn->query($selectSql);
 
@@ -75,7 +76,7 @@ FROM written_answers wa
 LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
 WHERE wa.employee_id = $employee_id 
 AND wa.module_id = $module_id      
-AND wr.written_result_id IS NULL";
+AND wa.is_marked = 0";
 
 $countResult = $conn->query($countSql);
 
@@ -134,7 +135,7 @@ if ($countResult->num_rows > 0) {
         </div>
 
         <div class="d-flex justify-content-center mb-2">
-            <h1> <strong>Essay Quiz Progress</strong> </h1>
+            <h1> <strong>Short Answer Quiz Progress</strong> </h1>
         </div>
         <p class="text-center">Module: <strong> <?php echo $module_name ?> </strong></p>
 
@@ -156,6 +157,7 @@ if ($countResult->num_rows > 0) {
                                 <tr>
                                     <th>Question</th>
                                     <th>Employee Name</th>
+                                    <th>Answer</th>
                                     <th>Feedback</th>
                                     <th>Grader</th>
                                     <th>Graded At</th>
@@ -169,6 +171,7 @@ if ($countResult->num_rows > 0) {
                                     <tr>
                                         <td><?php echo $row["question"] ?></td>
                                         <td><?php echo $row["employee_full_name"] ?></td>
+                                        <td><?php echo $row["written_answer"] ?></td>
                                         <td><?php echo $row["feedback"]; ?></td>
                                         <td><?php echo $row["grader_full_name"]; ?></td>
                                         <td><?php echo $row["graded_at"]; ?></td>
@@ -189,7 +192,7 @@ if ($countResult->num_rows > 0) {
                         </table>
                     <?php
                 } else {
-                    echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any essay quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
+                    echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any Short Answer quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
                 }
                     ?>
                     </div>

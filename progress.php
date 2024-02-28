@@ -20,7 +20,19 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     header("Location: login.php");
     exit();
 }
+
+// Fetch data from the module_questions table
+$totalQuestionsPerModule = array();
+$sqlTotalQuestions = "SELECT module_id, COUNT(*) as total_questions FROM module_questions GROUP BY module_id";
+$resultTotalQuestions = $conn->query($sqlTotalQuestions);
+if ($resultTotalQuestions->num_rows > 0) {
+    while ($rowTotalQuestions = $resultTotalQuestions->fetch_assoc()) {
+        $totalQuestionsPerModule[$rowTotalQuestions['module_id']] = $rowTotalQuestions['total_questions'];
+    }
+}
+
 ?>
+
 
 <!-- ================================================================================== -->
 
@@ -151,9 +163,32 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
                     // Loop through each row in the current module ID group
                     foreach ($rows as $row) {
+
+                        // Get the total number of questions for the current module
+                        $moduleTotalQuestions = isset($totalQuestionsPerModule[$row['module_id']]) ? $totalQuestionsPerModule[$row['module_id']] : 0;
+
+                        // Calculate the percentage of correct answers
+                        $score = $row['score'];
+                        $correctAnswers = round(($moduleTotalQuestions * $score) / 100, 0);
+
                         // Display the data for each row
                         echo '<tr class="table-row text-center" data-toggle="modal" data-target="#myModal">';
-                        echo '<td> <strong> ' . $row['score'] . ' </strong> ' . 'out of 100' . '</td>';
+                        if ($correctAnswers == $moduleTotalQuestions) {
+                            // If all answers are correct, use green badge
+                            echo "<td class='text-center align-middle'>
+                                    <div class='d-flex justify-content-center align-items-center'>
+                                        <span class='badge rounded-pill bg-success'>" . $correctAnswers . " out of " . $moduleTotalQuestions . "</span>
+                                    </div>
+                                  </td>";
+                        } else {
+                            // For other cases, use red badge
+                            echo "<td class='text-center align-middle'>
+                                    <div class='d-flex justify-content-center align-items-center'>
+                                        <span class='badge rounded-pill bg-danger'>" . $correctAnswers . " out of " . $moduleTotalQuestions . "</span>
+                                    </div>
+                                  </td>";
+                        }
+
                         echo '<td>' . $row['timestamp'] . '</td>';
                         echo '</tr>';
                     }
@@ -239,9 +274,30 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     <!-- JavaScript function to export the table to Excel -->
     <script>
         function exportToExcel() {
-            const table = document.querySelector("table");
-            const rows = Array.from(table.querySelectorAll("tr"));
-            const csvContent = rows.map(row => Array.from(row.querySelectorAll("th, td")).map(cell => cell.textContent).join(",")).join("\n");
+            const tables = document.querySelectorAll("table");
+
+            let csvContent = "Module,Score,Date\n";
+
+            tables.forEach(table => {
+                const moduleId = table.closest('.container').querySelector('h5 strong').textContent.trim();
+
+                const rows = Array.from(table.querySelectorAll("tbody tr"));
+                rows.forEach((row, index) => {
+                    const score = row.querySelector("td:nth-child(1)").textContent;
+                    const date = row.querySelector("td:nth-child(2)").textContent;
+
+                    // Append module name to CSV content only for the first row in each module
+                    if (index === 0) {
+                        csvContent += `${moduleId},`;
+                    } else {
+                        csvContent += ',,';
+                    }
+
+                    // Append score and date to CSV content
+                    csvContent += `${score},${date}\n`;
+                });
+            });
+
             const blob = new Blob([csvContent], {
                 type: "text/csv;charset=utf-8;"
             });

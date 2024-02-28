@@ -307,7 +307,7 @@ $result->free();
                                                 <ul class="dropdown-menu" aria-labelledby="editDropdown">
                                                     <li><a class="dropdown-item" href="edit-module.php?module_id=<?php echo $moduleId; ?>">Edit Module</a></li>
                                                     <li><a class="dropdown-item" href="edit-questions.php?module_id=<?php echo $moduleId; ?>">Edit MCQ Questions</a></li>
-                                                    <li><a class="dropdown-item" href="all-written-questions-list.php?module_id=<?php echo $moduleId; ?>">Edit Essay Questions</a></li>
+                                                    <li><a class="dropdown-item" href="all-written-questions-list.php?module_id=<?php echo $moduleId; ?>">Edit Short Answer Questions</a></li>
                                                 </ul>
                                             </div>
 

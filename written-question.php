@@ -65,6 +65,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 $nullify_stmt->bind_param("ii", $row['written_question_id'], $employeeId);
                                 $nullify_stmt->execute();
                                 $nullify_stmt->close();
+
+                                // Update is_marked to 1 in written_answers
+                                $update_is_marked_query = "UPDATE written_answers SET is_marked = 0 WHERE written_question_id = ? AND employee_id = ?";
+                                $update_is_marked_stmt = $conn->prepare($update_is_marked_query);
+                                if ($update_is_marked_stmt) {
+                                    $update_is_marked_stmt->bind_param("ii", $row['written_question_id'], $employeeId);
+                                    $update_is_marked_stmt->execute();
+                                    $update_is_marked_stmt->close();
+                                } else {
+                                    echo "Update is_marked Prepared statement error: " . $conn->error;
+                                }
                             } else {
                                 echo "Nullify Prepared statement error: " . $conn->error;
                             }
@@ -123,7 +134,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Essay Quiz</title>
+    <title>Short Answer Quiz</title>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -163,27 +174,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-10">
-                <div class="card mt-5 mb-5">
+                <div class="mt-5 mb-5">
                     <div class="card-body">
-                        <form method="POST">
+                        <form method="POST" onsubmit="return validateForm();">
                             <?php
                             $questionNumber = 1;
-                            echo "<h1 class='text-center'> <strong> Essay Quiz </strong> </h1>";
+                            echo "<h1 class='text-center'> <strong> Short Answer Quiz </strong> </h1>";
                             while ($row = $select_result->fetch_assoc()) {
-                                echo "<p class='card-title mt-5'> Question $questionNumber: </p>";
-                                // echo "<p class='card-text'> Question Id: " . $row['written_question_id'] . "</p>";
+                                echo "<div class='card mt-5 p-4 signature-bg-color text-white'>";
+                                echo "<p class='card-title'> Question $questionNumber: </p>";
                                 echo "<p class='card-text'><h4>" . $row['question'] . "</h4></p>";
                                 echo "<div class='mb-3'>";
-                                echo "<label for='answerInput$questionNumber' class='form-label'><strong>Your Answer:</strong></label>";
+                                echo "<label for='answerInput$questionNumber' class='form-label'><strong>Answer:</strong></label>";
                                 echo "<textarea class='form-control' name='answer$questionNumber' id='answerInput$questionNumber' rows='3' required></textarea>";
+                                echo "<span id='errorLabel$questionNumber' class='badge bg-danger rounded-pill text-white mt-2'></span>"; // Error message span
+                                echo "</div>";
                                 echo "</div>";
                                 $questionNumber++;
                             }
                             ?>
                             <div class="d-flex justify-content-center">
-                                <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#confirmationModal">Submit Answers</button>
+                                <button type="button" class="btn btn-dark mt-5" data-bs-toggle="modal" data-bs-target="#confirmationModal">Submit Answers</button>
                             </div>
-
                         </form>
                     </div>
                 </div>
@@ -204,7 +216,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn signature-btn" id="confirmSubmissionBtn">Submit Answers</button>
+                    <button type="submit" class="btn signature-btn" id="confirmSubmissionBtn">Submit Answers</button>
                 </div>
             </div>
         </div>
@@ -229,11 +241,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         };
     </script>
     <script>
+        function validateForm() {
+            var questionNumber = 1;
+            var isValid = true;
+
+            while (questionNumber <= <?php echo $select_result->num_rows; ?>) {
+                var answer = document.getElementById('answerInput' + questionNumber).value.trim();
+                var errorLabel = document.getElementById('errorLabel' + questionNumber);
+
+                if (answer === '') {
+                    isValid = false;
+                    errorLabel.innerHTML = 'Please answer this question.';
+                    // If validation fails, hide the modal
+                    $('#confirmationModal').modal('hide');
+                } else {
+                    errorLabel.innerHTML = ''; // Clear any previous error message
+                }
+
+                questionNumber++;
+            }
+
+            if (isValid) {
+                // If validation passes, directly submit the form
+                document.forms[0].submit();
+            }
+
+            return isValid;
+        }
+
         document.getElementById('confirmSubmissionBtn').addEventListener('click', function() {
-            // Trigger the actual form submission when the modal confirmation button is clicked
-            document.forms[0].submit();
+            // Validate the form
+            validateForm();
         });
     </script>
+
+
 
 </body>
 

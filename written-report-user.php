@@ -6,8 +6,6 @@ error_reporting(E_ALL);
 require_once("db_connect.php");
 require_once("inactivity_check.php");
 
-$employee_id = $_SESSION['employeeId'] ?? 'N/A';
-
 $role = $_SESSION['userRole'];
 
 // Check if the user is not logged in, then redirect to the login page
@@ -23,12 +21,8 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     exit();
 }
 
-// ================================================================================== 
-
-$selectModuleSql = "SELECT m.module_id, m.module_name, m.module_image , ma.module_id
-                    FROM modules m
-                    JOIN module_allocation ma ON m.module_id = ma.module_id AND ma.employee_id = '$employee_id'";
-$selectModuleResult = $conn->query($selectModuleSql);
+$userSql = "SELECT employee_id, full_name, profile_image FROM users";
+$userResult = $conn->query($userSql);
 
 ?>
 
@@ -43,7 +37,7 @@ $selectModuleResult = $conn->query($selectModuleSql);
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Short Answer Quiz Progress</title>
+    <title>Short Answer Quiz Module</title>
 
     <style>
         .card {
@@ -51,7 +45,7 @@ $selectModuleResult = $conn->query($selectModuleSql);
         }
 
         .card:hover {
-            transform: scale(1.02);
+            transform: scale(1.01);
         }
     </style>
 </head>
@@ -59,29 +53,42 @@ $selectModuleResult = $conn->query($selectModuleSql);
 <body class="d-flex flex-column min-vh-100 signature-bg-color">
     <?php require_once("nav-bar.php"); ?>
 
-    <div class="container mt-5 mb-4 text-light">
-        <div class="d-flex justify-content-start">
+    <div class="container mb-4 text-light">
+        <div class="d-flex justify-content-start mt-5">
             <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
-        <h1 class="text-center "><strong>Your Short Answer Progress</strong></h1>
+        <h1 class="text-center mt-4"><strong>Short Answer Report</strong></h1>
     </div>
 
-    <!-- Content Section -->
     <div class="container mt-2 mb-5">
-        <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="row row-cols-1 row-cols-md-4 g-5">
             <?php
-            if ($selectModuleResult->num_rows > 0) {
-                while ($row = $selectModuleResult->fetch_assoc()) {
-                    $module_image = $row['module_image'];
-                    $module_name = $row['module_name'];
-                    $module_id = $row['module_id'];
+            if ($userResult->num_rows > 0) {
+                while ($row = $userResult->fetch_assoc()) {
+                    $profile_image = $row['profile_image'];
+                    $full_name = $row['full_name'];
+                    $employee_id = $row['employee_id'];
             ?>
                     <div class="col">
-                        <a href="written-progress-more.php?module_id=<?php echo $module_id; ?>" class="card-link text-decoration-none">
+                        <a href="written-report-module.php?employee_id=<?php echo $employee_id; ?>" class="card-link text-decoration-none">
                             <div class="card h-100 shadow">
-                                <img src="<?php echo $module_image; ?>" class="card-img-top" alt="<?php echo $module_name; ?>">
+                                <div class="d-flex justify-content-center">
+                                    <?php
+                                    if ($profile_image) {
+                                        echo "<td><div><img src='$profile_image' alt='Profile Image' class='profile-pic mt-3' style='max-width: 5vh; max-height: 5vh'></div></td>";
+                                    } else {
+                                        $name_parts = explode(" ", $full_name);
+                                        $initials = "";
+                                        foreach ($name_parts as $part) {
+                                            $initials .= strtoupper(substr($part, 0, 1));
+                                        }
+                                        echo "<td><strong class='mt-3 bg-secondary p-2 rounded-5 text-white'> $initials </strong></td>";
+                                    }
+                                    ?>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title text-center"><?php echo $module_name; ?></h5>
+                                    <h5 class="card-title text-center"><?php echo $full_name; ?></h5>
+
                                 </div>
                             </div>
                         </a>
@@ -92,7 +99,9 @@ $selectModuleResult = $conn->query($selectModuleSql);
             ?>
         </div>
     </div>
-    <?php require_once("footer_logout.php") ?>
+
+
+    <?php require_once("footer_logout.php"); ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

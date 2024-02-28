@@ -24,6 +24,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 /* ================================================================================== */
 
 $module_id = isset($_GET['module_id']) ? $_GET['module_id'] : '';
+$employee_id = isset($_GET['employee_id']) ? $_GET['employee_id'] : '';
 
 // Pagination settings
 $availableRecordsPerPage = array(10, 15, 20);
@@ -37,7 +38,7 @@ $select_query = "SELECT wa.*, wq.question, u.full_name, wr.feedback, wr.written_
                 INNER JOIN users u ON wa.employee_id = u.employee_id
                 INNER JOIN written_questions wq ON wa.written_question_id = wq.written_question_id
                 LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
-                WHERE wq.module_id = $module_id AND (wa.employee_id LIKE '%$search_query%'
+                WHERE wa.employee_id = '$employee_id' AND wq.module_id = $module_id AND (wa.employee_id LIKE '%$search_query%'
                 OR wa.written_answer LIKE '%$search_query%'
                 OR LOWER(TRIM(wq.question)) LIKE LOWER('%$search_query%')
                 OR wr.feedback LIKE '%$search_query%'
@@ -82,6 +83,26 @@ $countResult = $conn->query($countQuery);
 $totalRecords = $countResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRecords / $recordsPerPage);
 
+/* ================================================================================== */
+
+$getNameSQL = "SElECT full_name FROM users WHERE employee_id = $employee_id";
+$nameResult = $conn->query($getNameSQL);
+$employeeName = '';
+
+if ($nameResult->num_rows > 0) {
+    $row = $nameResult->fetch_assoc();
+    $employeeName = $row['full_name'];
+}
+
+
+$getModuleNameSQL = "SELECT module_name FROM modules WHERE module_id = $module_id";
+$moduleNameResult = $conn->query($getModuleNameSQL);
+$moduleName = '';
+
+if ($moduleNameResult->num_rows > 0) {
+    $row = $moduleNameResult->fetch_assoc();
+    $moduleName = $row['module_name'];
+}
 /* ================================================================================== */
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-answer-id']) && isset($_POST['markQuestion'])) {
@@ -244,7 +265,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Essay Quiz List</title>
+    <title>Short Answer Marking List</title>
     <style>
         /* Add custom CSS styles here */
         @media (max-width: 576px) {
@@ -311,18 +332,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
         <div class="d-flex justify-content-start mt-5">
             <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
+        <h1 class="text-center"><strong>Short Answer Marking List</strong></h1>
 
-        <h1 class="text-center"><strong>Essay Question Marking List</strong></h1>
     </div>
 
     <div class="container d-flex justify-content-center">
         <div class="row justify-content-center">
             <div class="col-md-12">
+                <div class="d-flex justify-content-center bg-black p-4 rounded-2">
+                    <div class="d-flex flex-column align-items-start me-5">
+                        <h6 class="mb-2 text-white">Employee</h6>
+                        <h4 class="mb-2 text-white"><?php echo $employeeName ?></h4>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-start ms-5">
+                        <h6 class="mb-2 text-white">Module</h6>
+                        <h4 class="mb-2 text-white"><?php echo $moduleName ?></h4>
+                    </div>
+                </div>
                 <div class="card mt-3 mb-5 p-3" style="border: none">
+
                     <div class="card-body">
                         <form method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+                            <input type="hidden" name="module_id" value="<?php echo $module_id; ?>">
+                            <input type="hidden" name="employee_id" value="<?php echo $employee_id; ?>">
                             <input type="hidden" name="module_id" value="<?php echo htmlspecialchars($module_id); ?>">
-                            <div class="d-flex justify-content-between aling-items-center">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center col-md-8">
                                     <input class="form-control mr-sm-2 searchBtn" type="search" name="select_query" placeholder="Search" aria-label="Search" style="height: 38px;">
                                     <button class="btn btn-dark mx-2 my-2 my-sm-0 searchBtn" type="submit">Search</button>

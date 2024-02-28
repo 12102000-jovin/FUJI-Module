@@ -21,29 +21,31 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     exit();
 }
 
-$employee_id = $_GET['employee_id'];
+// Retrieve the username from the session
+$username = $_SESSION['username'] ?? '';
 
-$moduleSql = "SELECT DISTINCT m.module_id, m.module_image, m.module_name 
-              FROM modules m
-              JOIN written_answers wa ON m.module_id = wa.module_id
-              WHERE wa.employee_id = $employee_id";
-$moduleResult = $conn->query($moduleSql);
+// (Retrieve the employee ID and role from the users table)
+$getEmployeeId = "
+      SELECT u.employee_id, u.role, u.full_name, d.department_name
+      FROM users u
+      LEFT JOIN department d ON u.department_id = d.department_id
+      WHERE u.username = '$username';
+  ";
+// Execute the SQL query and store the result in the $result variable
+$getEmployeeIdResult = $conn->query($getEmployeeId);
 
-
-$checkMarkingSql = "SELECT is_marked FROM written_answers";
-$checkMarkingResult = $conn->query($checkMarkingSql);
-
-
-$getNameSQL = "SElECT full_name FROM users WHERE employee_id = $employee_id";
-$nameResult = $conn->query($getNameSQL);
-$employeeName = '';
-
-if ($nameResult->num_rows > 0) {
-    $row = $nameResult->fetch_assoc();
-    $employeeName = $row['full_name'];
+if ($getEmployeeIdResult->num_rows > 0) {
+    $row = $getEmployeeIdResult->fetch_assoc();
+    $employee_id = $row['employee_id'];
 }
 
-/* ================================================================================== */
+
+$userSql = "SELECT employee_id, full_name, profile_image FROM users WHERE employee_id != ?";
+$userStatement = $conn->prepare($userSql);
+$userStatement->bind_param("i", $employee_id); // Assuming $employee_id is an integer
+$userStatement->execute();
+$userResult = $userStatement->get_result();
+$userStatement->close();
 
 ?>
 
@@ -72,7 +74,6 @@ if ($nameResult->num_rows > 0) {
 </head>
 
 <body class="d-flex flex-column min-vh-100 signature-bg-color">
-
     <?php require_once("nav-bar.php"); ?>
 
     <div class="container mb-4 text-light">
@@ -80,22 +81,19 @@ if ($nameResult->num_rows > 0) {
             <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
         <h1 class="text-center mt-4"><strong>Short Answer Marking List</strong></h1>
-        <div class="d-flex justify-content-center">
-            <h5 class="mt-2 bg-black p-2 ps-2 pl-2 rounded-3">Employee: <?php echo $employeeName ?></h5>
-        </div>
     </div>
 
     <div class="container mt-2 mb-5">
-        <div class="row row-cols-1 row-cols-md-3 g-5">
+        <div class="row row-cols-1 row-cols-md-4 g-5">
             <?php
-            if ($moduleResult->num_rows > 0) {
-                while ($row = $moduleResult->fetch_assoc()) {
-                    $module_image = $row['module_image'];
-                    $module_name = $row['module_name'];
-                    $module_id = $row['module_id'];
+            if ($userResult->num_rows > 0) {
+                while ($row = $userResult->fetch_assoc()) {
+                    $profile_image = $row['profile_image'];
+                    $full_name = $row['full_name'];
+                    $employee_id = $row['employee_id'];
 
-                    // Fetch relevant rows from written_answers for the current module_id
-                    $checkMarkingSql = "SELECT is_marked FROM written_answers WHERE module_id = $module_id";
+                    // Fetch relevant rows from written_answers for the current user_id
+                    $checkMarkingSql = "SELECT is_marked FROM written_answers WHERE employee_id = $employee_id";
                     $checkMarkingResult = $conn->query($checkMarkingSql);
 
                     // Check if any row has is_marked = 0
@@ -108,11 +106,24 @@ if ($nameResult->num_rows > 0) {
                     }
             ?>
                     <div class="col">
-                        <a href="written-question-list.php?module_id=<?php echo $module_id; ?>&employee_id=<?php echo $employee_id; ?>" class="card-link text-decoration-none">
+                        <a href="written-question-module.php?employee_id=<?php echo $employee_id; ?>" class="card-link text-decoration-none">
                             <div class="card h-100 shadow">
-                                <img src="<?php echo $module_image; ?>" class="card-img-top">
+                                <div class="d-flex justify-content-center">
+                                    <?php
+                                    if ($profile_image) {
+                                        echo "<td><div><img src='$profile_image' alt='Profile Image' class='profile-pic mt-3' style='max-width: 5vh; max-height: 5vh'></div></td>";
+                                    } else {
+                                        $name_parts = explode(" ", $full_name);
+                                        $initials = "";
+                                        foreach ($name_parts as $part) {
+                                            $initials .= strtoupper(substr($part, 0, 1));
+                                        }
+                                        echo "<td><strong class='mt-3 bg-secondary p-2 rounded-5 text-white'> $initials </strong></td>";
+                                    }
+                                    ?>
+                                </div>
                                 <div class="card-body">
-                                    <h5 class="card-title text-center"><?php echo $module_name; ?></h5>
+                                    <h5 class="card-title text-center"><?php echo $full_name; ?></h5>
                                     <?php
                                     // Display "Needs Marking" message if required
                                     if ($needsMarking) {
@@ -131,7 +142,6 @@ if ($nameResult->num_rows > 0) {
     </div>
 
     <?php require_once("footer_logout.php"); ?>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

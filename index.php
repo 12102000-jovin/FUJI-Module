@@ -511,23 +511,23 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                               <span style="font-size: 8px">To-Do</span>
                           </span>';
                   } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
-                              <span style="font-size: 8px">Essay!</span>
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
+                              <span style="font-size: 8px">Short Answer!</span>
                           </span>';
                   } else if ($moduleScore == 100 && $unmarkedCount > 0 || $moduleScore < 100 && $unmarkedCount > 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
                             <span style="font-size: 8px">Unmarked!</span>
                         </span>';
                   } else if ($moduleScore < 100 && $countForModule == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
                             <span style="font-size: 8px">MCQ!</span>
                         </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center" style="z-index: 998;">
                             <span style="font-size: 8px">UnMarked!</span>
                         </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center" style="z-index: 998;">
                             <span style="font-size: 8px">Done</span>
                         </span>';
                   }
@@ -543,13 +543,13 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   // var_dump($countForModule);
                   // var_dump($unmarkedCount);
                   if ($countForModule === "0" && $unmarkedCount === "0") {
-                    echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Essay</button>';
+                    echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Short Answer</button>';
                   } else {
                     echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
                       (($countForModule !== null || $unmarkedCount > 0) ?
                         ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") . "Unmarked Questions: $unmarkedCount" :
                         "No Attempt") . '">
-                        Essay
+                        Short Answer
                     </button>';
                   }
                   ?>
@@ -644,27 +644,27 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <?php
                 // Check if the module is uncompleted or has less than 100% score
                 if ($moduleScore < 100 && $countForModule === null || $moduleScore < 100 && $countForModule > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center" style="z-index: 998;">
                                 <span style="font-size: 8px">To-Do</span>
                             </span>';
                 } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
-                                <span style="font-size: 8px">Essay!</span>
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
+                                <span style="font-size: 8px">Short Answer!</span>
                             </span>';
                 } else if ($moduleScore == 100 && $unmarkedCount > 0 || $moduleScore < 100 && $unmarkedCount > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
                                 <span style="font-size: 8px">Unmarked!</span>
                             </span>';
                 } else if ($moduleScore < 100 && $countForModule == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
                                 <span style="font-size: 8px">MCQ!</span>
                             </span>';
                 } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center">
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
                                 <span style="font-size: 8px">UnMarked!</span>
                             </span>';
                 } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center">
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center" style="z-index: 998;">
                                 <span style="font-size: 8px">Done</span>
                             </span>';
                 }
@@ -682,13 +682,13 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 // var_dump($unmarkedCount);
 
                 if ($countForModule === "0" && $unmarkedCount === "0") {
-                  echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Essay</button>';
+                  echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Short Answer</button>';
                 } else {
                   echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
                     (($countForModule !== null || $unmarkedCount > 0) ?
                       ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") . "Unmarked Questions: $unmarkedCount" :
                       "No Attempt") . '">
-                        Essay
+                      Short Answer
                     </button>';
                 }
                 ?>
@@ -719,8 +719,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
     <!-- ==================================================================================  -->
     <div class="mt-5"></div>
 
-    <div class="d-flex justify-content-center align-items-center fixed-center-right">
-      <button class="btn btn-dark btn-sm" type="button" data-bs-toggle="offcanvas" id="offCanvasBtn" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="font-size: 10px"><i class="fa-solid fa-caret-left fa-fade"></i> <strong> Badge Status </strong></button>
+    <div class="d-flex justify-content-center align-items-center fixed-center-right" style="z-index: 999;">
+      <button class="btn btn-dark btn-sm" type="button" data-bs-toggle="offcanvas" id="offCanvasBtn" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="font-size: 10px; "><i class="fa-solid fa-caret-left fa-fade"></i> <strong> Badge Status </strong></button>
     </div>
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel" style="width: 50%;">
@@ -745,7 +745,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
                     <p style="text-align: justify">The "To-Do" badge indicates that the module is unattempted or the module has less than 100% score in the Multiple Choice Question (MCQ) section
-                      and has false or unmarked answers in the essay section.</p>
+                      and has false or unmarked answers in the short answer section.</p>
                   </div>
                 </div>
               </div>
@@ -754,14 +754,14 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed text-light signature-bg-color bg-gradient" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                     <span class=" badge badge-lg badge-pill rounded-pill bg-info text-white d-flex align-items-center">
-                      <span>Essay!</span>
+                      <span>Short Answer!</span>
                     </span>
                   </button>
                 </h2>
                 <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "Essay!" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are either essay questions
-                      to be completed or false answer. You can check it in the <a href="written-progress.php">Essay Progress</a> page</p>
+                    <p style="text-align: justify">The "Short Answer!" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are either short answer questions
+                      to be completed or false answer. You can check it in the <a href="written-progress.php">Short Answer Progress</a> page</p>
                   </div>
                 </div>
               </div>
@@ -777,7 +777,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
                     <p style="text-align: justify">The "MCQ!" badge indicates that the module has less than a 100% score on the Multiple Choice Question (MCQ) section,
-                      but the essay section for the module is completed. You can check it in the <a href="progress.php">MCQ Progress</a> page </p>
+                      but the short answer section for the module is completed. You can check it in the <a href="progress.php">MCQ Progress</a> page </p>
                   </div>
                 </div>
               </div>
@@ -792,8 +792,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "Unmarked" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are unmarked essay questions.
-                      You can check it in the <a href="written-progress.php">Essay Progress</a> page </p>
+                    <p style="text-align: justify">The "Unmarked" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are unmarked short answer questions.
+                      You can check it in the <a href="written-progress.php">Short Answer Progress</a> page </p>
                   </div>
                 </div>
               </div>

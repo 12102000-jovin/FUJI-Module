@@ -79,7 +79,7 @@ if ($nameResult->num_rows > 0) {
         <div class="d-flex justify-content-start mt-5">
             <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
-        <h1 class="text-center mt-4"><strong>Short Answer Marking List</strong></h1>
+        <h1 class="text-center mt-4"><strong>Short Answer Report </strong></h1>
         <div class="d-flex justify-content-center">
             <h5 class="mt-2 bg-black p-2 ps-2 pl-2 rounded-3">Employee: <?php echo $employeeName ?></h5>
         </div>
@@ -93,38 +93,27 @@ if ($nameResult->num_rows > 0) {
                     $module_image = $row['module_image'];
                     $module_name = $row['module_name'];
                     $module_id = $row['module_id'];
-
-                    // Fetch relevant rows from written_answers for the current module_id
-                    $checkMarkingSql = "SELECT is_marked FROM written_answers WHERE module_id = $module_id";
-                    $checkMarkingResult = $conn->query($checkMarkingSql);
-
-                    // Check if any row has is_marked = 0
-                    $needsMarking = false;
-                    while ($checkRow = $checkMarkingResult->fetch_assoc()) {
-                        if ($checkRow['is_marked'] === '0') {
-                            $needsMarking = true;
-                            break;
-                        }
-                    }
             ?>
                     <div class="col">
-                        <a href="written-question-list.php?module_id=<?php echo $module_id; ?>&employee_id=<?php echo $employee_id; ?>" class="card-link text-decoration-none">
+                        <a href="written-report.php?module_id=<?php echo $module_id; ?>&employee_id=<?php echo $employee_id; ?>" class="card-link text-decoration-none">
                             <div class="card h-100 shadow">
                                 <img src="<?php echo $module_image; ?>" class="card-img-top">
                                 <div class="card-body">
                                     <h5 class="card-title text-center"><?php echo $module_name; ?></h5>
-                                    <?php
-                                    // Display "Needs Marking" message if required
-                                    if ($needsMarking) {
-                                        echo '<span class="position-absolute top-0 start-100 translate-middle badge bg-danger">Pending</span>';
-                                    }
-                                    ?>
                                 </div>
                             </div>
                         </a>
                     </div>
             <?php
                 }
+            } else {
+                echo "<div class='container text-center mt-5'>";
+                echo "  <div class='d-flex justify-content-center'>";
+                echo "      <div class='alert alert-danger' role='alert'>";
+                echo "          The user has not done any short answer quiz yet.";
+                echo "      </div>";
+                echo "  </div>";
+                echo "</div>";
             }
             ?>
         </div>

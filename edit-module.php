@@ -67,38 +67,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $updatedModuleName = mysqli_real_escape_string($conn, $_POST['moduleName']);
     $updatedModuleDescription = mysqli_real_escape_string($conn, $_POST['moduleDescription']);
 
-    // Retrieve file information
-    $moduleImage = $_FILES["moduleImage"];
-    $moduleVideo = $_FILES["moduleVideo"];
 
-    // Check if a new image file is uploaded
-    if ($moduleImage["size"] > 0) {
-        // New image file uploaded
-        $imagePath = "./Images/" . basename($moduleImage["name"]);
-        move_uploaded_file($moduleImage["tmp_name"], $imagePath);
-    } else {
-        // Use the existing image path
-        $imagePath = $_POST['existingModuleImage'];
-    }
+    // Check if the updated module name already exists
+    $checkSql = "SELECT module_id FROM modules WHERE module_name = '$updatedModuleName' AND module_id != '$module_id'";
+    $checkResult = $conn->query($checkSql);
 
-    // Check if a new video file is uploaded
-    if ($moduleVideo["size"] > 0) {
-        // New video file uploaded
-        $videoPath = "./Videos/" . basename($moduleVideo["name"]);
-        move_uploaded_file($moduleVideo["tmp_name"], $videoPath);
+    if ($checkResult->num_rows > 0) {
+        // Module name already exists, set an error session variable
+        echo '<script>alert("Module already exists.");</script>';
     } else {
-        // Use the existing video path
-        $videoPath = $_POST['existingModuleVideo'];
-    }
 
-    // Update the module data in the database
-    $updateSql = "UPDATE modules SET module_name = '$updatedModuleName', module_description = '$updatedModuleDescription', module_image = '$imagePath', module_video = '$videoPath' WHERE module_id = '$module_id'";
-    if ($conn->query($updateSql) === TRUE) {
-        // echo "Module updated successfully";
-        session_start();
-        $_SESSION["moduleUpdated"] = true;
-    } else {
-        echo "Error updating module: " . $conn->error;
+        // Retrieve file information
+        $moduleImage = $_FILES["moduleImage"];
+        $moduleVideo = $_FILES["moduleVideo"];
+
+        // Check if a new image file is uploaded
+        if ($moduleImage["size"] > 0) {
+            // New image file uploaded
+            $imagePath = "./Images/" . basename($moduleImage["name"]);
+            move_uploaded_file($moduleImage["tmp_name"], $imagePath);
+        } else {
+            // Use the existing image path
+            $imagePath = $_POST['existingModuleImage'];
+        }
+
+        // Check if a new video file is uploaded
+        if ($moduleVideo["size"] > 0) {
+            // New video file uploaded
+            $videoPath = "./Videos/" . basename($moduleVideo["name"]);
+            move_uploaded_file($moduleVideo["tmp_name"], $videoPath);
+        } else {
+            // Use the existing video path
+            $videoPath = $_POST['existingModuleVideo'];
+        }
+
+        // Update the module data in the database
+        $updateSql = "UPDATE modules SET module_name = '$updatedModuleName', module_description = '$updatedModuleDescription', module_image = '$imagePath', module_video = '$videoPath' WHERE module_id = '$module_id'";
+        if ($conn->query($updateSql) === TRUE) {
+            // echo "Module updated successfully";
+            session_start();
+            $_SESSION["moduleUpdated"] = true;
+        } else {
+            echo "Error updating module: " . $conn->error;
+        }
     }
 }
 

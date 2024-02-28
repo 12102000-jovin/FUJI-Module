@@ -340,7 +340,7 @@ $conn->close();
 
                     <div class="d-flex justify-content-between mb-3">
                         <div class="d-flex align-items-center">
-                            <h4 class="my-0"><strong> User Licenses </strong></h4>
+                            <h4 class="my-0"><strong>Licenses </strong></h4>
                         </div>
                         <button type="button" class="btn btn-dark addBtn" data-bs-toggle="modal" data-bs-target="#addLicenseModal">
                             + Add License

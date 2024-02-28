@@ -343,7 +343,7 @@ $conn->close();
                     // Print the user details in a table row
                     echo '<tr class="text-center align-middle">';
                     if ($profile_image) {
-                        echo "<td><div><img src='$profile_image' alt='Profile Image' class='profile-pic' style='max-width: 5vh'></div></td>";
+                        echo "<td><div><img src='$profile_image' alt='Profile Image' class='profile-pic' style='max-width: 5vh; max-height: 5vh'></div></td>";
                     } else {
                         $name_parts = explode(" ", $full_name);
                         $initials = "";
@@ -369,9 +369,11 @@ $conn->close();
                     if ($role === 'admin') {
                         echo ' <a href="edit-user.php?employee_id=' . $employee_id . '"><i class="fa-regular fa-pen-to-square signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Edit User"></i></a>';
                     }
+                    echo '<a href="profile-more.php?employee_id=' . $employee_id . '"><i class="fa-solid fa-id-badge signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="User Profile"></i></a>';
 
                     echo '<a href="allocate-more.php?employee_id=' . $employee_id . '"><i class="fa-solid fa-list-check signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Allocate Module"></i></a>
                                 <a href="manage-license.php?employee_id=' . $employee_id . '"><i class="fa-regular fa-id-card signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Manage License"></i></a>';
+
 
                     if ($role === 'admin') {
                         if ($user['is_active'] == '1') {
@@ -388,7 +390,9 @@ $conn->close();
                                           </a>';
                         }
                     }
+
                     echo '</td>';
+
                     echo '</tr>';
                 }
                 echo '</tbody>';

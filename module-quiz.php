@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 require_once("db_connect.php");
 
 // Checking the inactivity 
@@ -85,7 +83,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
   <div class="container d-flex flex-column justify-content-center align-items-center flex-grow-1">
     <div class="question-box" style="display: grid; place-items:center;">
-      <form method="post" class="text-white p-5 rounded-3 bg-gradient signature-bg-color">
+      <form method="post" class="text-white p-5 rounded-3 bg-gradient signature-bg-color mt-5" style="max-width: 80vw; min-width: 50vw">
         <?php
 
         // Check if the quiz session has timed out (e.g., 30 minutes timeout)
@@ -194,16 +192,24 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           $questionId = $question['questions_id'];
 
           // Display the question number and question text
-          echo "<h4 class='question'>$questionText</h4>";
+          echo "<h4 class='question' style='word-wrap: break-word;'>$questionText</h4>";
 
           foreach ($options as $option) {
+            $wordCount = str_word_count($option);
+
+            // Set the rows attribute based on the word count
+            $rowsAttribute = ($wordCount <= 1) ? "rows='1'" : "";
+
             echo "<div class='input-group mb-2'>";
             echo "<div class='input-group-text'>";
             echo "<input class='form-check-input mt-0 sr-only' type='radio' name='answer' value='$option' aria-label='Radio button for following text input' onclick='enableNextButton()'>";
             echo "</div>";
-            echo "<input type='text' class='form-control' value='$option' aria-label='Text input with radiobutton' style='background-color: white;' readonly>";
+            echo "<textarea class='form-control resizable' aria-label='Text input with radiobutton' style='background-color: white; resize: none; word-wrap: break-word;' readonly> $option </textarea>";
             echo "</div>";
           }
+
+
+
 
           // Display the question number and total number of questions at the bottom
           echo '<div class="text-center mt-3">';
@@ -255,7 +261,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           echo '<span style="margin-right: 10px;"></span>';
           echo '<a href="index.php" class="btn btn-dark" onclick="disableConfirmationAlert()">Home</a>';
           echo '<span style="margin-right: 10px;"></span>';
-          echo '<a href="written-question.php?moduleId=' . $moduleId . '" class="btn btn-info" onclick="disableConfirmationAlert()">Continue to Essay</a>';
+          echo '<a href="written-question.php?moduleId=' . $moduleId . '" class="btn btn-info" onclick="disableConfirmationAlert()">Continue to Short Answer</a>';
 
           // Store the quiz results in the database
           $employee_id = $_SESSION['employeeId'] ?? 'N/A';
@@ -294,6 +300,12 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     </div>
   </div>
 
+  <div class="mt-5"></div>
+  <div class="mt-5"></div>
+  <div class="mt-5"></div>
+  <div class="mt-5"></div>
+
+
   <!-- ================================================================================== -->
 
   <!-- Footer Section -->
@@ -316,6 +328,15 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
         history.go(1);
         alert("Access to the previous page in the quiz is restricted.");
       };
+    });
+  </script>
+
+  <script>
+    $(document).ready(function() {
+      $('.auto-expand').on('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+      }).trigger('input'); // Trigger input event on page load to adjust height
     });
   </script>
 
@@ -386,6 +407,20 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
       }
 
       nextButton.disabled = !checked;
+    }
+  </script>
+
+  <script>
+    const textareas = document.getElementsByClassName("resizable");
+
+    for (let i = 0; i < textareas.length; i++) {
+      textareas[i].setAttribute("style", "height:" + (textareas[i].scrollHeight) + "px;overflow-y:hidden;");
+      textareas[i].addEventListener("input", OnInput, false);
+    }
+
+    function OnInput() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + "px";
     }
   </script>
 

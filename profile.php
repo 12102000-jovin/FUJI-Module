@@ -293,22 +293,22 @@ function getCountForModule($conn, $moduleId, $employeeId)
                                                             $countForModule = getCountForModule($conn, $module_id, $employee_id);
 
                                                             if ($module_score !== null && $countForModule > 0) {
-                                                                // Both MCQ score and essay attempted
+                                                                // Both MCQ score and Short Answer attempted
                                                                 echo "<p class='card-text' style='margin-bottom: 0;'>Highest MCQ Score: $module_score%</p>
                                                                 <div class='progress' style='height: 5px; margin-bottom: 10px;'>
                                                                   <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]%;' aria-valuenow='$highestScores[$module_id]' aria-valuemin='0' aria-valuemax='100'></div>
                                                                 </div>
-                                                                <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Essay Attempted</a>";
+                                                                <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Short Answer Attempted</a>";
                                                             } elseif ($countForModule > 0) {
-                                                                // Essay attempted but no MCQ score
-                                                                echo "<a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none'>Essay Attempted</a>";
+                                                                // Short Answer attempted but no MCQ score
+                                                                echo "<a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-success tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none'>Short Answer Attempted</a>";
                                                             } elseif ($module_score !== null) {
-                                                                // MCQ score but no essay attempted
+                                                                // MCQ score but no Short Answer attempted
                                                                 echo "<p class='card-text' style='margin-bottom: 0;'>Highest MCQ Score: $module_score%</p>
                                                                       <div class='progress' style='height: 5px; margin-bottom: 10px;'>
                                                                         <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]%;' aria-valuenow='$highestScores[$module_id]' aria-valuemin='0' aria-valuemax='100'></div>
                                                                       </div>
-                                                                      <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-danger tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Essay Not Attempt</a>";
+                                                                      <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-danger tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Short Answer Not Attempt</a>";
                                                             }
                                                             ?>
                                                         </div>

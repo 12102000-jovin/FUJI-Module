@@ -119,7 +119,7 @@ $conn->close();
             <?php
             foreach ($userAnswers as $userAnswer) {
                 echo "<div class='question-answer'>";
-                echo "<h4 class='mb-3'>Question: " . $userAnswer['question'] . "</h4>";
+                echo "<h4 class='mb-3' style='word-wrap: break-word;'>Question: " . $userAnswer['question'] . "</h4>";
 
                 // Display options
                 echo "<table class='table table-bordered table-responsive'>";
@@ -140,13 +140,13 @@ $conn->close();
                         echo " class='table-success'";
                     }
                     echo ">";
-                    echo "<td>" . $option;
+                    echo "<td class='d-flex align-items-center'>" . $option;
                     if (($userAnswer['answer'] == $userAnswer['correct_answer']) && ($userAnswer['answer'] == $option)) {
-                        echo " <strong class='float-end text-white bg-success'>User chose the correct answer</strong>";
+                        echo " <strong class='ms-auto text-white badge rounded-pill bg-success'>User chose the correct answer</strong>";
                     } else if ($userAnswer['answer'] == $option) {
-                        echo " <strong class='float-end text-white bg-primary'>Chosen Answer</strong>";
+                        echo " <strong class='ms-auto text-white badge rounded-pill bg-danger'>Chosen Answer</strong>";
                     } else if ($userAnswer['correct_answer'] == $option) {
-                        echo " <strong class='float-end text-white bg-success'>Correct Answer</strong>";
+                        echo " <strong class='ms-auto text-white badge rounded-pill bg-success'>Correct Answer</strong>";
                     }
                     echo "</td>";
                     echo "</tr>";

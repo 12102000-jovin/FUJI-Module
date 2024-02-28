@@ -99,7 +99,7 @@ $conn->close();
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="startDropdown">
                     <li><a class="dropdown-item" onclick="window.location.href='module-quiz.php?module_id=<?php echo $moduleId; ?>';" style="text-decoration: none;">Start Module (MCQ)</a></li>
-                    <li><a class="dropdown-item" onclick="window.location.href='written-question.php?moduleId=<?php echo $moduleId; ?>';" style="text-decoration: none;">Start Module (Essay)</a></li>
+                    <li><a class="dropdown-item" onclick="window.location.href='written-question.php?moduleId=<?php echo $moduleId; ?>';" style="text-decoration: none;">Start Module (Short Answer)</a></li>
                 </ul>
             </div>
         </div>

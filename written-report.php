@@ -29,41 +29,52 @@ $offset = ($pageNumber - 1) * $recordsPerPage;
 
 $search_query = isset($_GET['select_query']) ? $_GET['select_query'] : '';
 
+$employee_id = isset($_GET['employee_id']) ? $_GET['employee_id'] : '';
+$module_id = isset($_GET['module_id']) ? $_GET['module_id'] : '';
+
 $query = "SELECT
-wa.module_id,
-m.module_name,
-wr.feedback,
-wr.employee_id AS employee_id_wr,
-wr.grader_id,
-u_employee.full_name AS employee_full_name,
-wr.graded_at,
-wr.is_correct,
-u_grader.employee_id AS grader_employee_id,
-u_grader.full_name AS grader_full_name,
-wq.question
+    wa.module_id,
+    wa.written_answer,
+    m.module_name,
+    wr.feedback,
+    wr.employee_id AS employee_id_wr,
+    wr.grader_id,
+    u_employee.full_name AS employee_full_name,
+    wr.graded_at,
+    wr.is_correct,
+    u_grader.employee_id AS grader_employee_id,
+    u_grader.full_name AS grader_full_name,
+    wq.question
 FROM
-written_results wr
+    written_results wr
 JOIN
-written_answers wa ON wr.written_answer_id = wa.written_answer_id
+    written_answers wa ON wr.written_answer_id = wa.written_answer_id
 JOIN
-users u_employee ON wr.employee_id = u_employee.employee_id
+    users u_employee ON wr.employee_id = u_employee.employee_id
 JOIN
-users u_grader ON wr.grader_id = u_grader.employee_id
+    users u_grader ON wr.grader_id = u_grader.employee_id
 JOIN
-written_questions wq ON wa.written_question_id = wq.written_question_id
+    written_questions wq ON wa.written_question_id = wq.written_question_id
 JOIN
-modules m ON wa.module_id = m.module_id
-WHERE m.module_name LIKE '%$search_query%'
+    modules m ON wa.module_id = m.module_id
+WHERE
+    wa.employee_id = '$employee_id'
+    AND wa.module_id = '$module_id'
+    AND (m.module_name LIKE '%$search_query%'
     OR wq.question LIKE '%$search_query%'
     OR wr.feedback LIKE '%$search_query%'
     OR u_employee.full_name LIKE '%$search_query%'
     OR u_grader.full_name LIKE '%$search_query%'
     OR wa.module_id LIKE '%$search_query%'
     OR (LOWER('$search_query') = 'true' AND wr.is_correct = '1' 
-        OR LOWER('$search_query') = 'false' AND wr.is_correct = '0')
-GROUP BY wa.module_id, wr.graded_at
-ORDER BY wa.module_id, wr.graded_at DESC
-LIMIT $offset, $recordsPerPage";
+        OR LOWER('$search_query') = 'false' AND wr.is_correct = '0'))
+    AND wa.is_marked = 1
+GROUP BY
+    wa.module_id, wr.graded_at
+ORDER BY
+    wa.module_id, wr.graded_at DESC
+LIMIT
+    $offset, $recordsPerPage";
 
 $result = mysqli_query($conn, $query);
 
@@ -95,6 +106,37 @@ $countQuery = "
 $countResult = $conn->query($countQuery);
 $totalRecords = $countResult->fetch_assoc()['total'];
 $totalPages = ceil($totalRecords / $recordsPerPage);
+
+/* ================================================================================== */
+
+$getNameSQL = "SELECT full_name FROM users WHERE employee_id = ?";
+$stmt = $conn->prepare($getNameSQL);
+$stmt->bind_param("s", $employee_id);
+$stmt->execute();
+$nameResult = $stmt->get_result();
+$stmt->close();
+
+$employeeName = '';
+
+if ($nameResult->num_rows > 0) {
+    $row = $nameResult->fetch_assoc();
+    $employeeName = $row['full_name'];
+}
+
+$getModuleNameSQL = "SELECT module_name FROM modules WHERE module_id = ?";
+$stmtModuleName = $conn->prepare($getModuleNameSQL);
+$stmtModuleName->bind_param("s", $module_id);
+$stmtModuleName->execute();
+$moduleNameResult = $stmtModuleName->get_result();
+$stmtModuleName->close();
+
+$moduleName = '';
+
+if ($moduleNameResult->num_rows > 0) {
+    $row = $moduleNameResult->fetch_assoc();
+    $moduleName = $row['module_name'];
+}
+
 ?>
 
 <!-- ================================================================================== -->
@@ -110,7 +152,7 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
     <link rel="shortcut icon" type="image/x-icon" href="Images/FE-logo-icon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Report (Essay)</title>
+    <title>Report (Short Answer)</title>
 
     <style>
         /* Add custom CSS styles here */
@@ -170,13 +212,27 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
         </div>
 
         <h1 class="text-center">
-            <strong> Essay Report </strong>
+            <strong> Short Answer Report </strong>
         </h1>
     </div>
 
     <div class="container">
+        <div class="d-flex justify-content-center bg-black p-4 rounded-2 mb-3">
+            <div class="d-flex flex-column align-items-start me-5">
+                <h6 class="mb-2 text-white">Employee</h6>
+                <h4 class="mb-2 text-white"><?php echo $employeeName ?></h4>
+            </div>
+
+            <div class="d-flex flex-column align-items-start ms-5">
+                <h6 class="mb-2 text-white">Module</h6>
+                <h4 class="mb-2 text-white"><?php echo $moduleName ?></h4>
+            </div>
+        </div>
         <div class="mb-5 p-4 bg-light rounded-3 shadow-lg tableborder">
+
             <form method="GET">
+                <input type="hidden" name="module_id" value="<?php echo $module_id; ?>">
+                <input type="hidden" name="employee_id" value="<?php echo $employee_id; ?>">
                 <div class="d-flex justify-content-between mb-3">
                     <div class="col-md-8 d-flex align-items-center">
                         <div class="d-flex align-items-center col-md-8 ">
@@ -198,11 +254,12 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
             </form>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped table-hover text-center">
+
                     <thead class="align-middle">
                         <tr>
-                            <th>Module ID</th>
-                            <th>Module Name</th>
+                            <!-- <th>Module Name</th> -->
                             <th>Question</th>
+                            <th>Answer</th>
                             <th>Employee</th>
                             <th>Feedback</th>
                             <th>Grader</th>
@@ -212,24 +269,28 @@ $totalPages = ceil($totalRecords / $recordsPerPage);
                     </thead>
                     <tbody class="align-middle">
                         <?php
-                        // Loop through the results and display data
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo "<tr>";
-                            echo "<td>{$row['module_id']}</td>";
-                            echo "<td>{$row['module_name']}</td>";
-                            echo "<td>{$row['question']}</td>";
-                            echo "<td>{$row['employee_full_name']}</td>";
-                            echo "<td>{$row['feedback']}</td>";
-                            echo "<td>{$row['grader_full_name']}</td>";
-                            echo "<td>{$row['graded_at']}</td>";
-                            echo "<td>";
-                            if ($row['is_correct'] === '0') {
-                                echo '<span class=\'badge rounded-pill text-bg-danger\' style=\'font-size:16px\'>False</span>';
-                            } else if ($row['is_correct'] === '1') {
-                                echo '<span class=\'badge rounded-pill text-bg-success\' style=\'font-size:16px\'>True</span>';
+                        if ($result->num_rows > 0) {
+                            // Loop through the results and display data
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                echo "<tr>";
+                                // echo "<td>{$row['module_name']}</td>";
+                                echo "<td>{$row['question']}</td>";
+                                echo "<td>{$row['written_answer']}</td>";
+                                echo "<td>{$row['employee_full_name']}</td>";
+                                echo "<td>{$row['feedback']}</td>";
+                                echo "<td>{$row['grader_full_name']}</td>";
+                                echo "<td>{$row['graded_at']}</td>";
+                                echo "<td>";
+                                if ($row['is_correct'] === '0') {
+                                    echo '<span class=\'badge rounded-pill text-bg-danger\' style=\'font-size:16px\'>False</span>';
+                                } else if ($row['is_correct'] === '1') {
+                                    echo '<span class=\'badge rounded-pill text-bg-success\' style=\'font-size:16px\'>True</span>';
+                                }
+                                echo "</td>";
+                                echo "</tr>";
                             }
-                            echo "</td>";
-                            echo "</tr>";
+                        } else {
+                            echo '<tr><td col-md-6 colspan="7" class="text-center">No Answers</td></tr>';
                         }
                         ?>
                     </tbody>

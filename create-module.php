@@ -43,40 +43,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $moduleName = $_POST["moduleName"];
     $moduleDescription = $_POST["moduleDescription"];
 
-    // Retrieve file information
-    $moduleImage = $_FILES["moduleImage"];
-    $moduleVideo = $_FILES["moduleVideo"];
+    // Check if the module name already exists
+    $checkSql = "SELECT * FROM modules WHERE module_name = ?";
+    $checkStmt =  $conn->prepare($checkSql);
+    $checkStmt->bind_param("s", $moduleName);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
 
-    // File paths
-    $imagePath = "./Images/" . basename($moduleImage["name"]);
-    $videoPath = "./Videos/" . basename($moduleVideo["name"]);
-
-    // Move uploaded files to the specified directories
-    move_uploaded_file($moduleImage["tmp_name"], $imagePath);
-    move_uploaded_file($moduleVideo["tmp_name"], $videoPath);
-
-    // Prepare the SQL statement
-    $sql = "INSERT INTO modules (module_name, module_description, module_image, module_video) VALUES (?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-
-    // Bind the parameters
-    $stmt->bind_param("ssss", $moduleName, $moduleDescription, $imagePath, $videoPath);
-
-    // Execute the statement
-    if ($stmt->execute()) {
-        // echo "Module created successfully";
-
-        // Get the generated module ID
-        $moduleId = $stmt->insert_id;
-
-        // Store the module ID in the session
-        $_SESSION["moduleId"] = $moduleId;
-        $_SESSION["moduleName"] = $moduleName;
-        $_SESSION["moduleCreated"] = true;
+    if ($result->num_rows > 0) {
+        // Module name already exists, set an error session variable
+        echo '<script>alert("Module already exists.");</script>';
     } else {
-        echo "Error: " . $stmt->error;
+
+        // Retrieve file information
+        $moduleImage = $_FILES["moduleImage"];
+        $moduleVideo = $_FILES["moduleVideo"];
+
+        // File paths
+        $imagePath = "./Images/" . basename($moduleImage["name"]);
+        $videoPath = "./Videos/" . basename($moduleVideo["name"]);
+
+        // Move uploaded files to the specified directories
+        move_uploaded_file($moduleImage["tmp_name"], $imagePath);
+        move_uploaded_file($moduleVideo["tmp_name"], $videoPath);
+
+        // Prepare the SQL statement
+        $sql = "INSERT INTO modules (module_name, module_description, module_image, module_video) VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+
+        // Bind the parameters
+        $stmt->bind_param("ssss", $moduleName, $moduleDescription, $imagePath, $videoPath);
+
+        // Execute the statement
+        if ($stmt->execute()) {
+            // echo "Module created successfully";
+
+            // Get the generated module ID
+            $moduleId = $stmt->insert_id;
+
+            // Store the module ID in the session
+            $_SESSION["moduleId"] = $moduleId;
+            $_SESSION["moduleName"] = $moduleName;
+            $_SESSION["moduleCreated"] = true;
+        } else {
+            echo "Error: " . $stmt->error;
+        }
+        $stmt->close();
     }
-    $stmt->close();
 }
 $conn->close();
 ?>
