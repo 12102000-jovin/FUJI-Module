@@ -195,11 +195,6 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
           echo "<h4 class='question' style='word-wrap: break-word;'>$questionText</h4>";
 
           foreach ($options as $option) {
-            $wordCount = str_word_count($option);
-
-            // Set the rows attribute based on the word count
-            $rowsAttribute = ($wordCount <= 1) ? "rows='1'" : "";
-
             echo "<div class='input-group mb-2'>";
             echo "<div class='input-group-text'>";
             echo "<input class='form-check-input mt-0 sr-only' type='radio' name='answer' value='$option' aria-label='Radio button for following text input' onclick='enableNextButton()'>";
@@ -257,7 +252,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
           // Add a button to start a new quiz
           echo '<div class="container text-center">';
-          echo '<button class="btn btn-secondary mr-3" type="submit" name="try_again" onclick="disableConfirmationAlert()">Try Again</button>';
+          // echo '<button class="btn btn-secondary mr-3" type="submit" name="try_again" onclick="disableConfirmationAlert()">Try Again</button>';
           echo '<span style="margin-right: 10px;"></span>';
           echo '<a href="index.php" class="btn btn-dark" onclick="disableConfirmationAlert()">Home</a>';
           echo '<span style="margin-right: 10px;"></span>';
@@ -421,6 +416,30 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     function OnInput() {
       this.style.height = 'auto';
       this.style.height = (this.scrollHeight) + "px";
+    }
+  </script>
+
+  <script>
+    var isPageRefreshed = false;
+
+    // Check if the page is refreshed
+    window.onbeforeunload = function(event) {
+      if (!isPageRefreshed) {
+        // Display a confirmation alert
+        event.returnValue = true;
+        return 'Are you sure you want to leave the quiz? Your progress will be lost.';
+      }
+    };
+
+    // Add an event listener for the Next Question button
+    document.getElementById('nextButton').addEventListener('click', function() {
+      // Set the flag to true when the Next Question button is clicked
+      isPageRefreshed = true;
+    });
+
+    // Function to disable the confirmation alert
+    function disableConfirmationAlert() {
+      isPageRefreshed = true;
     }
   </script>
 

@@ -158,12 +158,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'true') {
                             <?php while ($question_row = mysqli_fetch_assoc($questions_result)) { ?>
                                 <tr class="question-row">
                                     <!-- Display individual question and options using PHP variables -->
-                                    <td><?php echo $question_row['question']; ?></td>
-                                    <td class="text-center"><?php echo $question_row['option1']; ?></td>
-                                    <td class="text-center"><?php echo $question_row['option2']; ?></td>
-                                    <td class="text-center"><?php echo $question_row['option3']; ?></td>
-                                    <td class="text-center"><?php echo $question_row['option4']; ?></td>
-                                    <td class="text-center"><?php echo $question_row['correct_answer']; ?></td>
+                                    <td style="max-width:30vw; word-wrap: break-word"><?php echo $question_row['question']; ?></td>
+                                    <td class="text-center" style="max-width:20vw; word-wrap: break-word"><?php echo $question_row['option1']; ?></td>
+                                    <td class="text-center" style="max-width:20vw; word-wrap: break-word"><?php echo $question_row['option2']; ?></td>
+                                    <td class="text-center" style="max-width:20vw; word-wrap: break-word"><?php echo $question_row['option3']; ?></td>
+                                    <td class="text-center" style="max-width:20vw; word-wrap: break-word"><?php echo $question_row['option4']; ?></td>
+                                    <td class="text-center" style="max-width:20vw; word-wrap: break-word"><?php echo $question_row['correct_answer']; ?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>

@@ -64,33 +64,37 @@ $result->free();
 // Query to retrieve attempted modules and their scores for a specific employee
 $attemptedModulesQuery = "
 SELECT 
-ma.module_id, 
-m.module_name, 
-m.module_description, 
-m.module_image, 
-r.score,
-COALESCE(MAX(r.score), wa.written_answer) AS result_or_written_answer
-FROM 
-module_allocation ma
-JOIN 
-modules m ON ma.module_id = m.module_id
-LEFT JOIN 
-results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
-LEFT JOIN (
-SELECT module_id, MAX(score) AS max_score
-FROM results
-WHERE employee_id = '$employee_id'
-GROUP BY module_id
-) t ON r.module_id = t.module_id AND r.score = t.max_score
-LEFT JOIN 
-written_answers wa ON ma.module_id = wa.module_id AND ma.employee_id = wa.employee_id
+    module_id, 
+    module_name, 
+    module_description, 
+    module_image, 
+    score,
+    result_or_written_answer
+FROM (
+    SELECT 
+        ma.module_id, 
+        m.module_name, 
+        m.module_description, 
+        m.module_image, 
+        r.score,
+        COALESCE(MAX(r.score) OVER (PARTITION BY ma.module_id ORDER BY r.score DESC), wa.written_answer) AS result_or_written_answer,
+        ROW_NUMBER() OVER (PARTITION BY ma.module_id ORDER BY r.score DESC) AS row_num
+    FROM 
+        module_allocation ma
+    JOIN 
+        modules m ON ma.module_id = m.module_id
+    LEFT JOIN 
+        results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
+    LEFT JOIN 
+        written_answers wa ON ma.module_id = wa.module_id AND ma.employee_id = wa.employee_id
+    WHERE 
+        m.is_archived = '0' 
+        AND (r.employee_id = '$employee_id' OR wa.employee_id = '$employee_id')
+) ranked_data
 WHERE 
-m.is_archived = '0' 
-AND (r.employee_id = '$employee_id' OR wa.employee_id = '$employee_id')
-GROUP BY 
-ma.module_id, m.module_name, m.module_description, m.module_image
+    row_num = 1
 ORDER BY 
-ma.module_id;
+    module_id;
 ";
 $attemptedModulesResult = $conn->query($attemptedModulesQuery);
 
@@ -308,7 +312,7 @@ function getCountForModule($conn, $moduleId, $employeeId)
                                                                       <div class='progress' style='height: 5px; margin-bottom: 10px;'>
                                                                         <div class='progress-bar signature-bg-color' role='progressbar' style='width: $highestScores[$module_id]%;' aria-valuenow='$highestScores[$module_id]' aria-valuemin='0' aria-valuemax='100'></div>
                                                                       </div>
-                                                                      <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-danger tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Short Answer Not Attempt</a>";
+                                                                      <a href='written-progress-more.php?module_id=$module_id' class='badge badge-pill bg-danger tooltips' data-toggle='tooltip' data-bs-placement='right' title='Check Module' style='text-decoration: none; margin-top: 10px;'>Short Answer Not Attempted</a>";
                                                             }
                                                             ?>
                                                         </div>

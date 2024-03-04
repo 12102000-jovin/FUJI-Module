@@ -95,7 +95,7 @@ $modulesResult = $conn->query($modulesQuery);
 function getCountForModule($conn, $moduleId, $employeeId)
 {
   // Check if there is any data in written_results for the current module
-  $checkDataQuery = "SELECT COUNT(*) AS data_count FROM written_results WHERE module_id = $moduleId AND employee_id = $employeeId";
+  $checkDataQuery = "SELECT COUNT(*) AS data_count FROM written_results WHERE module_id = $moduleId AND employee_id = $employeeId AND is_correct != NULL";
   $checkDataResult = $conn->query($checkDataQuery);
 
   if ($checkDataResult) {
@@ -142,7 +142,7 @@ function getUnmarkedQuestionCount($conn, $moduleId, $employeeId)
   $sql = "SELECT COUNT(*) as unmarked_count
     FROM written_answers wa
     LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
-    WHERE wr.written_answer_id IS NULL AND wa.module_id = $moduleId AND wa.employee_id = $employeeId";
+    WHERE wr.written_answer_id IS NULL AND wa.module_id = $moduleId AND wa.employee_id = $employeeId OR is_correct IS NULL";
 
   // Execute the query
   $result = $conn->query($sql);
@@ -189,33 +189,37 @@ function getCountForEssayModule($conn, $moduleId, $employeeId)
 // Query to retrieve attempted modules and their scores for a specific employee
 $attemptedModulesQuery = "
 SELECT 
-    ma.module_id, 
-    m.module_name, 
-    m.module_description, 
-    m.module_image, 
-    r.score,
-    COALESCE(MAX(r.score), wa.written_answer) AS result_or_written_answer
-FROM 
-    module_allocation ma
-JOIN 
-    modules m ON ma.module_id = m.module_id
-LEFT JOIN 
-    results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
-LEFT JOIN (
-    SELECT module_id, MAX(score) AS max_score
-    FROM results
-    WHERE employee_id = '$employee_id'
-    GROUP BY module_id
-) t ON r.module_id = t.module_id AND r.score = t.max_score
-LEFT JOIN 
-    written_answers wa ON ma.module_id = wa.module_id AND ma.employee_id = wa.employee_id
+    module_id, 
+    module_name, 
+    module_description, 
+    module_image, 
+    score,
+    result_or_written_answer
+FROM (
+    SELECT 
+        ma.module_id, 
+        m.module_name, 
+        m.module_description, 
+        m.module_image, 
+        r.score,
+        COALESCE(MAX(r.score) OVER (PARTITION BY ma.module_id ORDER BY r.score DESC), wa.written_answer) AS result_or_written_answer,
+        ROW_NUMBER() OVER (PARTITION BY ma.module_id ORDER BY r.score DESC) AS row_num
+    FROM 
+        module_allocation ma
+    JOIN 
+        modules m ON ma.module_id = m.module_id
+    LEFT JOIN 
+        results r ON ma.module_id = r.module_id AND ma.employee_id = r.employee_id
+    LEFT JOIN 
+        written_answers wa ON ma.module_id = wa.module_id AND ma.employee_id = wa.employee_id
+    WHERE 
+        m.is_archived = '0' 
+        AND (r.employee_id = '$employee_id' OR wa.employee_id = '$employee_id')
+) ranked_data
 WHERE 
-    m.is_archived = '0' 
-    AND (r.employee_id = '$employee_id' OR wa.employee_id = '$employee_id')
-GROUP BY 
-    ma.module_id, m.module_name, m.module_description, m.module_image
+    row_num = 1
 ORDER BY 
-    ma.module_id;
+    module_id;
 
   ";
 
@@ -554,7 +558,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   }
                   ?>
 
-                  <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($highestScores[$moduleId] !== null ? "Highest MCQ Score: $highestScores[$moduleId]" . "%" : "No Attempt") ?>">
+                  <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($moduleScore !== null && $moduleScore !== "0" ? "Highest MCQ Score: $moduleScore" . "%" : "No Attempt") ?>">
                     MCQ
                   </button>
                 </div>
@@ -693,7 +697,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 }
                 ?>
 
-                <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($highestScores[$moduleId] !== null ? "Highest MCQ Score: $highestScores[$moduleId]" . "%" : "No Attempt") ?>">
+                <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($moduleScore !== null && $moduleScore !== "0" ? "Highest MCQ Score: $moduleScore" . "%" : "No Attempt") ?>">
                   MCQ
                 </button>
               </div>

@@ -110,7 +110,7 @@ if ($nameResult->num_rows > 0) {
                 echo "<div class='container text-center mt-5'>";
                 echo "  <div class='d-flex justify-content-center'>";
                 echo "      <div class='alert alert-danger' role='alert'>";
-                echo "          The user has not done any short answer quiz yet.";
+                echo "          $employeeName has not done any short answer quiz yet.";
                 echo "      </div>";
                 echo "  </div>";
                 echo "</div>";

@@ -95,7 +95,7 @@ if ($nameResult->num_rows > 0) {
                     $module_id = $row['module_id'];
 
                     // Fetch relevant rows from written_answers for the current module_id
-                    $checkMarkingSql = "SELECT is_marked FROM written_answers WHERE module_id = $module_id";
+                    $checkMarkingSql = "SELECT is_marked FROM written_answers WHERE module_id = $module_id and employee_id= $employee_id";
                     $checkMarkingResult = $conn->query($checkMarkingSql);
 
                     // Check if any row has is_marked = 0
@@ -125,6 +125,14 @@ if ($nameResult->num_rows > 0) {
                     </div>
             <?php
                 }
+            } else {
+                echo "<div class='container text-center mt-5'>";
+                echo "  <div class='d-flex justify-content-center'>";
+                echo "      <div class='alert alert-danger' role='alert'>";
+                echo "          $employeeName has not done any short answer quiz yet.";
+                echo "      </div>";
+                echo "  </div>";
+                echo "</div>";
             }
             ?>
         </div>

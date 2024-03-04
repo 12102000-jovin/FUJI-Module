@@ -2,7 +2,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbName = "FUJI-Module";
+$dbName = "FUJI-Modules";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbName);

@@ -42,7 +42,7 @@ if ($getEmployeeIdResult->num_rows > 0) {
 
 $userSql = "SELECT employee_id, full_name, profile_image FROM users WHERE employee_id != ?";
 $userStatement = $conn->prepare($userSql);
-$userStatement->bind_param("i", $employee_id); // Assuming $employee_id is an integer
+$userStatement->bind_param("i", $employee_id);
 $userStatement->execute();
 $userResult = $userStatement->get_result();
 $userStatement->close();

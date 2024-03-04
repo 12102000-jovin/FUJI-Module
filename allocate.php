@@ -375,7 +375,7 @@ $conn->close();
                                 <a href="manage-license.php?employee_id=' . $employee_id . '"><i class="fa-regular fa-id-card signature-color m-2 tooltips" data-toggle="tooltip" data-placement="top" title="Manage License"></i></a>';
 
 
-                    if ($role === 'admin') {
+                    if ($role === 'admin' && $username !== "admin") {
                         if ($user['is_active'] == '1') {
                             echo '<a href="allocate.php?deactivate=true&employee_id=' . $employee_id . '&page=' . $pageNumber . '" style="text-decoration:none">
                                             <i class="text-danger fa-solid fa-user-slash m-2 tooltips"
