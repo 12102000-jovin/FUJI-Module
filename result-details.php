@@ -114,7 +114,7 @@ $conn->close();
 
     <!-- ================================================================================== -->
 
-    <div class="container">
+    <div class="container mb-5">
         <div class="text-white p-5 rounded-3 bg-gradient signature-bg-color shadow-lg">
             <?php
             foreach ($userAnswers as $userAnswer) {
@@ -140,7 +140,7 @@ $conn->close();
                         echo " class='table-success'";
                     }
                     echo ">";
-                    echo "<td class='d-flex align-items-center'>" . $option;
+                    echo "<td class='d-flex align-items-center text-break'>" . $option;
                     if (($userAnswer['answer'] == $userAnswer['correct_answer']) && ($userAnswer['answer'] == $option)) {
                         echo " <strong class='ms-auto text-white badge rounded-pill bg-success'>User chose the correct answer</strong>";
                     } else if ($userAnswer['answer'] == $option) {
@@ -165,9 +165,7 @@ $conn->close();
             }
             ?>
         </div>
-        <div class="text-center mt-3 mb-5">
-            <button class="btn btn-secondary shadow" onclick="window.print()"><i class="fa-solid fa-print"> </i> Print</button>
-        </div>
+
     </div>
 
     <!-- ================================================================================== -->

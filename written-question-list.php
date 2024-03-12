@@ -330,7 +330,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['written-result-id']) 
 
     <div class="container">
         <div class="d-flex justify-content-start mt-5">
-            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
+            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="written-question-module.php?employee_id= <?php echo $employee_id ?>"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
         <h1 class="text-center"><strong>Short Answer Marking List</strong></h1>
 

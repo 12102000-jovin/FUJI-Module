@@ -162,9 +162,16 @@ $exportResult = $conn->query($sqlExport);
 
 // Check if the CSV export is requested
 if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+
+    // Set the time zone to Sydney, Australia
+    date_default_timezone_set('Australia/Sydney');
+
+    // Format the current date
+    $currentDate = date('d_m_Y');
+
     // Output headers
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="exported_results.csv"');
+    header('Content-Disposition: attachment; filename=" ' . $currentDate . ' - MCQ Report.csv"');
 
     // Create a file pointer connected to the output stream
     $output = fopen('php://output', 'w');
@@ -172,6 +179,11 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     // Fetch the first row (headers) and output it
     if ($exportResult->num_rows > 0) {
         $header = $exportResult->fetch_assoc();
+
+        // Exclude result_id and duration from the headers
+        unset($header['result_id']);
+        unset($header['duration']);
+
         fputcsv($output, array_keys($header));
 
         // Output data
@@ -180,6 +192,10 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
             $moduleTotalQuestions = isset($totalQuestionsPerModule[$header['module_id']]) ? $totalQuestionsPerModule[$header['module_id']] : 0;
             $correctAnswers = round(($moduleTotalQuestions * $header['score']) / 100, 0);
             $score = $correctAnswers . " out of " . $moduleTotalQuestions;
+
+            // Exclude result_id and duration from the data
+            unset($header['result_id']);
+            unset($header['duration']);
 
             // Replace the 'score' field with the modified score
             $header['score'] = $score;
@@ -195,6 +211,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     $conn->close();
     exit(); // Exit to prevent the HTML content from being displayed
 }
+
 
 $conn->close();
 ?>

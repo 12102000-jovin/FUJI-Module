@@ -260,7 +260,6 @@ if ($moduleNameResult->num_rows > 0) {
                             <!-- <th>Module Name</th> -->
                             <th>Question</th>
                             <th>Answer</th>
-                            <th>Employee</th>
                             <th>Feedback</th>
                             <th>Grader</th>
                             <th>Graded At</th>
@@ -276,7 +275,6 @@ if ($moduleNameResult->num_rows > 0) {
                                 // echo "<td>{$row['module_name']}</td>";
                                 echo "<td>{$row['question']}</td>";
                                 echo "<td>{$row['written_answer']}</td>";
-                                echo "<td>{$row['employee_full_name']}</td>";
                                 echo "<td>{$row['feedback']}</td>";
                                 echo "<td>{$row['grader_full_name']}</td>";
                                 echo "<td>{$row['graded_at']}</td>";
@@ -295,6 +293,9 @@ if ($moduleNameResult->num_rows > 0) {
                         ?>
                     </tbody>
                 </table>
+                <div class="d-flex justify-content-end">
+                    <button class="btn signature-btn m-1 mb-2" onclick="exportToExcel()">Export to CSV</button>
+                </div>
             </div>
 
             <?php
@@ -378,6 +379,45 @@ if ($moduleNameResult->num_rows > 0) {
             }
         });
     </script>
+    <script>
+        function exportToExcel() {
+
+            const currentDate = new Date().toLocaleDateString('en-AU', {
+                timeZone: 'Australia/Sydney'
+            });
+
+            const employeeId = "<?php echo $employee_id; ?>";
+            const employeeName = "<?php echo $employeeName; ?>";
+            const moduleName = "<?php echo $moduleName ?>"
+
+            const rows = document.querySelectorAll('.table tbody tr');
+            let csvContent = `Module Name: ${moduleName},Employee ID: ${employeeId} \n\nQuestion, Answer, Feedback, Grader, Graded At, Result\n`;
+
+            rows.forEach(row => {
+                const question = row.querySelector('td:nth-child(1)').textContent.trim();
+                const answer = row.querySelector('td:nth-child(2)').textContent.trim();
+                const feedback = row.querySelector('td:nth-child(3)').textContent.trim();
+                const grader = row.querySelector('td:nth-child(4)').textContent.trim();
+                const gradedAt = row.querySelector('td:nth-child(5)').textContent.trim();
+                const result = row.querySelector('td:nth-child(6)').textContent.trim();
+
+                const rowData = `${question}, ${answer}, ${feedback}, ${grader}, ${gradedAt}, ${result}`;
+                csvContent += rowData + "\n";
+            });
+
+            const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = `${employeeId} - ${employeeName} - ${currentDate} - Short Answer Report.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+
+
 </body>
 
 </html>

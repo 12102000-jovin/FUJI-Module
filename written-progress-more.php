@@ -70,6 +70,34 @@ if ($result->num_rows > 0) {
 }
 
 
+$getNameSQL = "SELECT full_name FROM users WHERE employee_id = ?";
+$stmt = $conn->prepare($getNameSQL);
+$stmt->bind_param("s", $employee_id);
+$stmt->execute();
+$nameResult = $stmt->get_result();
+$stmt->close();
+
+$employeeName = '';
+
+if ($nameResult->num_rows > 0) {
+    $row = $nameResult->fetch_assoc();
+    $employeeName = $row['full_name'];
+}
+
+
+$getModuleNameSQL = "SELECT module_name FROM modules WHERE module_id = ?";
+$stmtModuleName = $conn->prepare($getModuleNameSQL);
+$stmtModuleName->bind_param("s", $module_id);
+$stmtModuleName->execute();
+$moduleNameResult = $stmtModuleName->get_result();
+$stmtModuleName->close();
+
+$moduleName = '';
+
+if ($moduleNameResult->num_rows > 0) {
+    $row = $moduleNameResult->fetch_assoc();
+    $moduleName = $row['module_name'];
+}
 
 $countSql = "SELECT COUNT(DISTINCT wa.written_question_id) AS question_count
 FROM written_answers wa
@@ -156,7 +184,6 @@ if ($countResult->num_rows > 0) {
                             <thead class="align-middle">
                                 <tr>
                                     <th>Question</th>
-                                    <th>Employee Name</th>
                                     <th>Answer</th>
                                     <th>Feedback</th>
                                     <th>Grader</th>
@@ -170,7 +197,6 @@ if ($countResult->num_rows > 0) {
                                 ?>
                                     <tr>
                                         <td><?php echo $row["question"] ?></td>
-                                        <td><?php echo $row["employee_full_name"] ?></td>
                                         <td><?php echo $row["written_answer"] ?></td>
                                         <td><?php echo $row["feedback"]; ?></td>
                                         <td><?php echo $row["grader_full_name"]; ?></td>
@@ -190,6 +216,9 @@ if ($countResult->num_rows > 0) {
                                 ?>
                             </tbody>
                         </table>
+                        <div class="d-flex justify-content-center">
+                            <button class="btn signature-btn m-1 mb-2" onclick="exportToExcel()">Export to CSV</button>
+                        </div>
                     <?php
                 } else {
                     echo "<div class='container text-center alert alert-danger mt-3'><strong>You have not done any Short Answer quiz in this module, or the quiz that you have completed has not been marked.</strong></div>";
@@ -210,6 +239,43 @@ if ($countResult->num_rows > 0) {
         tooltips.forEach(t => {
             new bootstrap.Tooltip(t)
         })
+    </script>
+    <script>
+        function exportToExcel() {
+            const currentDate = new Date().toLocaleDateString('en-AU', {
+                timeZone: 'Australia/Sydney'
+            })
+
+            const employeeId = "<?php echo $employee_id; ?>";
+            const employeeName = "<?php echo $employeeName; ?>";
+            const moduleName = "<?php echo $moduleName ?>"
+
+            const rows = document.querySelectorAll('.table tbody tr');
+            let csvContent = `Module Name: ${moduleName},Employee ID: ${employeeId} \n\nQuestion, Answer, Feedback, Grader, Graded At, Result\n`;
+
+
+            rows.forEach(row => {
+                const question = row.querySelector('td:nth-child(1)').textContent.trim();
+                const answer = row.querySelector('td:nth-child(2)').textContent.trim();
+                const feedback = row.querySelector('td:nth-child(3)').textContent.trim();
+                const grader = row.querySelector('td:nth-child(4)').textContent.trim();
+                const gradedAt = row.querySelector('td:nth-child(5)').textContent.trim();
+                const result = row.querySelector('td:nth-child(6)').textContent.trim();
+
+                const rowData = `${question}, ${answer}, ${feedback}, ${grader}, ${gradedAt}, ${result}`;
+                csvContent += rowData + "\n";
+            })
+
+            const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = `${employeeId} - ${employeeName}  - ${currentDate} - Short Answer Progress.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 

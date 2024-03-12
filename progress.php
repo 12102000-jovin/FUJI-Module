@@ -31,6 +31,8 @@ if ($resultTotalQuestions->num_rows > 0) {
     }
 }
 
+$employee_id = $_SESSION['employeeId'] ?? 'N/A';
+
 ?>
 
 
@@ -93,7 +95,7 @@ if ($resultTotalQuestions->num_rows > 0) {
 
     <div class="container mb-5">
         <?php
-        $employee_id = $_SESSION['employeeId'] ?? 'N/A';
+
 
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
@@ -103,6 +105,7 @@ if ($resultTotalQuestions->num_rows > 0) {
         $query = "SELECT 
                 results.employee_id, 
                 users.username, 
+                users.full_name,
                 modules.module_name, 
                 results.score, 
                 results.timestamp,
@@ -274,37 +277,52 @@ if ($resultTotalQuestions->num_rows > 0) {
     <!-- JavaScript function to export the table to Excel -->
     <script>
         function exportToExcel() {
-            const tables = document.querySelectorAll("table");
+            const containers = document.querySelectorAll('.container.mb-2');
 
-            let csvContent = "Module,Score,Date\n";
+            const currentDate = new Date().toLocaleDateString('en-AU', {
+                timeZone: 'Australia/Sydney'
+            });
 
-            tables.forEach(table => {
-                const moduleId = table.closest('.container').querySelector('h5 strong').textContent.trim();
+            const employeeId = "<?php echo $employee_id; ?>";
 
-                const rows = Array.from(table.querySelectorAll("tbody tr"));
-                rows.forEach((row, index) => {
-                    const score = row.querySelector("td:nth-child(1)").textContent;
-                    const date = row.querySelector("td:nth-child(2)").textContent;
+            const fullName = "<?php echo $row['full_name'] ?? ''; ?>";
 
-                    // Append module name to CSV content only for the first row in each module
-                    if (index === 0) {
-                        csvContent += `${moduleId},`;
-                    } else {
-                        csvContent += ',,';
-                    }
+            let csvContent = `Employee ID: ${employeeId}, Full Name: ${fullName}\n`; // Header for the first table
 
-                    // Append score and date to CSV content
-                    csvContent += `${score},${date}\n`;
+            csvContent += "\n"; // Separate tables with an empty line
+
+            containers.forEach(container => {
+                const moduleTitle = container.querySelector('h5 strong').textContent.trim();
+                const rows = Array.from(container.querySelectorAll('tbody tr'));
+
+                // Header for the second table
+                csvContent += `Module,Score,Date\n`;
+
+                let isFirstRow = true;
+
+                rows.forEach(row => {
+                    const score = row.querySelector('td:nth-child(1)').textContent.trim();
+                    const date = row.querySelector('td:nth-child(2)').textContent.trim();
+
+                    // Print module name only for the first row of each module
+                    const moduleName = isFirstRow ? moduleTitle : '';
+
+                    // Add module, score, and date to the CSV content
+                    csvContent += `${moduleName},${score},${date}\n`;
+
+                    isFirstRow = false;
                 });
+
+                csvContent += "\n"; // Separate tables with an empty line
             });
 
             const blob = new Blob([csvContent], {
-                type: "text/csv;charset=utf-8;"
+                type: 'text/csv;charset=utf-8;'
             });
-            const link = document.createElement("a");
+            const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.href = url;
-            link.download = "progress.csv";
+            link.download = `${employeeId} - ${fullName} - ${currentDate}  - MCQ Progress.csv`;
             link.click();
             URL.revokeObjectURL(url);
         }

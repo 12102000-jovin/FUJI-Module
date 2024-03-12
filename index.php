@@ -88,14 +88,13 @@ $modulesQuery = "
 ";
 
 
-
 // Execute the SQL query and store the result set in $moduleResult
 $modulesResult = $conn->query($modulesQuery);
 
 function getCountForModule($conn, $moduleId, $employeeId)
 {
   // Check if there is any data in written_results for the current module
-  $checkDataQuery = "SELECT COUNT(*) AS data_count FROM written_results WHERE module_id = $moduleId AND employee_id = $employeeId AND is_correct != NULL";
+  $checkDataQuery = "SELECT COUNT(*) AS data_count FROM written_results WHERE module_id = $moduleId AND employee_id = $employeeId AND is_correct != NULL OR is_correct = 0";
   $checkDataResult = $conn->query($checkDataQuery);
 
   if ($checkDataResult) {
@@ -137,12 +136,13 @@ function getCountForModule($conn, $moduleId, $employeeId)
 
 function getUnmarkedQuestionCount($conn, $moduleId, $employeeId)
 {
-
   // SQL query to count unmarked questions
   $sql = "SELECT COUNT(*) as unmarked_count
-    FROM written_answers wa
-    LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
-    WHERE wr.written_answer_id IS NULL AND wa.module_id = $moduleId AND wa.employee_id = $employeeId OR is_correct IS NULL";
+          FROM written_answers wa
+          LEFT JOIN written_results wr ON wa.written_answer_id = wr.written_answer_id
+          WHERE (wr.written_answer_id IS NULL OR is_correct IS NULL)
+                AND wa.module_id = $moduleId
+                AND wa.employee_id = $employeeId";
 
   // Execute the query
   $result = $conn->query($sql);
@@ -158,6 +158,7 @@ function getUnmarkedQuestionCount($conn, $moduleId, $employeeId)
   // Return the count of unmarked questions
   return $row['unmarked_count'];
 }
+
 
 function getCountForEssayModule($conn, $moduleId, $employeeId)
 {
@@ -481,6 +482,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
               continue; // Skip this module
             }
 
+            $numAttemptedQuestion = getCountForEssayModule($conn, $moduleId, $employee_id);
+
             // Store the highest score for the module
             $highestScores[$moduleId] = $moduleScore;
 
@@ -510,31 +513,33 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   </div>
                   <?php
                   // Check if the module is uncompleted or has less than 100% score
-                  if ($moduleScore < 100 && $countForModule === null || $moduleScore < 100 && $countForModule > 0) {
+                  if ($moduleScore < 100 && $countForModule === null && $unmarkedCount == 0 && $numAttemptedQuestion == 0 || $moduleScore < 100 && $countForModule == 0 && $unmarkedCount == 0  && $numAttemptedQuestion == 0 || $moduleScore < 100 && $countForModule > 0 && $unmarkedCount == 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
-                              <span style="font-size: 8px">To-Do</span>
-                          </span>';
-                  } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
+                           <span style="font-size: 8px">To-Do</span>
+                       </span>';
+                  } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0 && $numAttemptedQuestion > 0) {
+                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center" style="z-index: 998;">
+                         <span style="font-size: 8px">Done</span>
+                     </span>';
+                  } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0)  || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0 && $numAttemptedQuestion == 0)) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                              <span style="font-size: 8px">Short Answer!</span>
-                          </span>';
+                           <span style="font-size: 8px">Short Answer!</span>
+                       </span>';
                   } else if ($moduleScore == 100 && $unmarkedCount > 0 || $moduleScore < 100 && $unmarkedCount > 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                            <span style="font-size: 8px">Unmarked!</span>
-                        </span>';
+                         <span style="font-size: 8px">Unmarked!</span>
+                     </span>';
                   } else if ($moduleScore < 100 && $countForModule == 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                            <span style="font-size: 8px">MCQ!</span>
-                        </span>';
+                         <span style="font-size: 8px">MCQ!</span>
+                     </span>';
                   } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
                     echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center" style="z-index: 998;">
-                            <span style="font-size: 8px">UnMarked!</span>
-                        </span>';
-                  } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                    echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center" style="z-index: 998;">
-                            <span style="font-size: 8px">Done</span>
-                        </span>';
+                         <span style="font-size: 8px">Unmarked!</span>
+                     </span>';
                   }
+                  // echo (
+                  //   "MCQ:" . $moduleScore . "<br> " . "Incorrect: " . $countForModule . "<br>Unmarked:" . $unmarkedCount . "<br>Attempted: " . $numAttemptedQuestion);
                   ?>
               </a>
               <div class="container mt-auto">
@@ -546,16 +551,21 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                   <?php
                   // var_dump($countForModule);
                   // var_dump($unmarkedCount);
-                  if ($countForModule === "0" && $unmarkedCount === "0") {
+
+                  if (($countForModule === 0 && $unmarkedCount === 0 && $numAttemptedQuestion > 0) ||
+                    ($countForModule == 0 && $unmarkedCount == "0" && $numAttemptedQuestion > 0)
+                  ) {
                     echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Short Answer</button>';
                   } else {
                     echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
                       (($countForModule !== null || $unmarkedCount > 0) ?
-                        ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") . "Unmarked Questions: $unmarkedCount" :
+                        ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") .
+                        "Unmarked Questions: $unmarkedCount" :
                         "No Attempt") . '">
-                        Short Answer
-                    </button>';
+                            Short Answer
+                        </button>';
                   }
+
                   ?>
 
                   <button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="<?php echo ($moduleScore !== null && $moduleScore !== "0" ? "Highest MCQ Score: $moduleScore" . "%" : "No Attempt") ?>">
@@ -623,6 +633,8 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
           $unmarkedCount = getUnmarkedQuestionCount($conn, $moduleId, $employee_id);
           // echo "Number of unmarked questions: $unmarkedCount";
 
+          $numAttemptedQuestion = getCountForEssayModule($conn, $moduleId, $employee_id);
+
           // Limit the description to a maximum of 100 character
           $maxCharacters = 100;
           $charactersArray = str_split($moduleDescription);
@@ -647,32 +659,33 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </div>
                 <?php
                 // Check if the module is uncompleted or has less than 100% score
-                if ($moduleScore < 100 && $countForModule === null || $moduleScore < 100 && $countForModule > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center" style="z-index: 998;">
-                                <span style="font-size: 8px">To-Do</span>
-                            </span>';
-                } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0) || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0)) {
+                if ($moduleScore < 100 && $countForModule === null && $unmarkedCount == 0 && $numAttemptedQuestion == 0 || $moduleScore < 100 && $countForModule == 0 && $unmarkedCount == 0  && $numAttemptedQuestion == 0 || $moduleScore < 100 && $countForModule > 0 && $unmarkedCount == 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center">
+                           <span style="font-size: 8px">To-Do</span>
+                       </span>';
+                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0 && $numAttemptedQuestion > 0) {
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center" style="z-index: 998;">
+                         <span style="font-size: 8px">Done</span>
+                     </span>';
+                } else if (($moduleScore == 100 && $countForModule > 0 && $unmarkedCount == 0)  || ($moduleScore == 100 && $countForModule === null && $unmarkedCount == 0 && $numAttemptedQuestion == 0)) {
                   echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                                <span style="font-size: 8px">Short Answer!</span>
-                            </span>';
+                           <span style="font-size: 8px">Short Answer!</span>
+                       </span>';
                 } else if ($moduleScore == 100 && $unmarkedCount > 0 || $moduleScore < 100 && $unmarkedCount > 0) {
                   echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                                <span style="font-size: 8px">Unmarked!</span>
-                            </span>';
+                         <span style="font-size: 8px">Unmarked!</span>
+                     </span>';
                 } else if ($moduleScore < 100 && $countForModule == 0) {
                   echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                                <span style="font-size: 8px">MCQ!</span>
-                            </span>';
+                         <span style="font-size: 8px">MCQ!</span>
+                     </span>';
                 } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount > 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-info text-white d-flex align-items-center" style="z-index: 998;">
-                                <span style="font-size: 8px">UnMarked!</span>
-                            </span>';
-                } else if ($moduleScore == 100 && $countForModule == 0 && $unmarkedCount == 0) {
-                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-success text-white d-flex align-items-center" style="z-index: 998;">
-                                <span style="font-size: 8px">Done</span>
-                            </span>';
+                  echo '<span class="position-absolute top-0 start-100 translate-middle badge badge-pill rounded-pill bg-danger text-white d-flex align-items-center" style="z-index: 998;">
+                         <span style="font-size: 8px">Unmarked!</span>
+                     </span>';
                 }
-
+                // echo (
+                //   "MCQ:" . $moduleScore . "<br> " . "Incorrect: " . $countForModule . "<br>Unmarked:" . $unmarkedCount . "<br>Attempted: " . $numAttemptedQuestion);
                 ?>
             </a>
             <div class="container mt-auto">
@@ -685,14 +698,17 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 // var_dump($countForModule);
                 // var_dump($unmarkedCount);
 
-                if ($countForModule === "0" && $unmarkedCount === "0") {
+                if (($countForModule === 0 && $unmarkedCount === 0 && $numAttemptedQuestion > 0) ||
+                  ($countForModule == 0 && $unmarkedCount == "0" && $numAttemptedQuestion > 0)
+                ) {
                   echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px; data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="Completed">Short Answer</button>';
                 } else {
                   echo '<button class="badge badge-pill tooltips rounded-3 p-2 status-badge signature-bg-color bg-gradient" style="border:none; width: 120px;" data-bs-toggle="tooltip" data-html="true" data-bs-placement="top" title="' .
                     (($countForModule !== null || $unmarkedCount > 0) ?
-                      ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") . "Unmarked Questions: $unmarkedCount" :
+                      ($countForModule !== null ? "False Answer: $countForModule" . "\n" : "No False Answer" . "\n") .
+                      "Unmarked Questions: $unmarkedCount" :
                       "No Attempt") . '">
-                      Short Answer
+                        Short Answer
                     </button>';
                 }
                 ?>
@@ -748,8 +764,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "To-Do" badge indicates that the module is unattempted or the module has less than 100% score in the Multiple Choice Question (MCQ) section
-                      and has false or unmarked answers in the short answer section.</p>
+                    <p style="text-align: justify">The 'To-Do' badge indicates that the module is unattempted or has less than a 100% score in the Multiple Choice Question (MCQ) section, and the short answer section has not been attempted or has false questions in the short answer section.</p>
                   </div>
                 </div>
               </div>
@@ -764,8 +779,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "Short Answer!" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are either short answer questions
-                      to be completed or false answer. You can check it in the <a href="written-progress.php">Short Answer Progress</a> page</p>
+                    <p style="text-align: justify">The 'Short Answer!' badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there has been no attempt in the short answer section or there are incorrect questions. You can check it in the <a href="written-progress.php">Short Answer Progress</a> page</p>
                   </div>
                 </div>
               </div>
@@ -780,8 +794,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "MCQ!" badge indicates that the module has less than a 100% score on the Multiple Choice Question (MCQ) section,
-                      but the short answer section for the module is completed. You can check it in the <a href="progress.php">MCQ Progress</a> page </p>
+                    <p style="text-align: justify">The 'MCQ!' badge indicates that the module has less than a 100% score on the Multiple Choice Question (MCQ) section, but the short answer section for the module is completed. You can check it in the <a href="progress.php">MCQ Progress</a> page </p>
                   </div>
                 </div>
               </div>
@@ -796,7 +809,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "Unmarked" badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are unmarked short answer questions.
+                    <p style="text-align: justify">The 'Unmarked' badge indicates that the module has a 100% score on the Multiple Choice Question (MCQ) section, but there are unmarked short answer questions.
                       You can check it in the <a href="written-progress.php">Short Answer Progress</a> page </p>
                   </div>
                 </div>
@@ -812,7 +825,7 @@ $unattemptedModulesResult = $conn->query($unattemptedModulesQuery);
                 </h2>
                 <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <p style="text-align: justify">The "Done" badge indicates that the module has already been completed, and no further actions required for the module.</p>
+                    <p style="text-align: justify">The 'Done' badge indicates that the module has already been completed, and no further actions required for the module.</p>
                   </div>
                 </div>
               </div>

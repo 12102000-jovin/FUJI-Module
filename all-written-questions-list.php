@@ -126,12 +126,9 @@ if (isset($_POST['add_question'])) {
 <body class="d-flex flex-column min-vh-100">
     <?php require_once("nav-bar.php"); ?>
 
+    <div class="mt-5"></div>
     <div class="container">
-        <div class="d-flex justify-content-start mt-5">
-            <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
-        </div>
-
-        <div class="text-center mb-3">
+        <div class="text-center mb-3 mt-5">
             <h1> <strong>Short Answer Questions</strong></h1>
             <p>Module: <strong> <?php echo $module_name ?> </strong></p>
             <a data-bs-toggle='modal' data-bs-target='#addQuestionModal' type="button" class="btn btn-dark addQuestionBtn ">+ Add Question</a>
@@ -167,6 +164,9 @@ if (isset($_POST['add_question'])) {
                 echo '<p>No questions found for this module.</p>';
             }
             ?>
+        </div>
+        <div class="d-flex justify-content-center mt-3">
+            <a class="btn btn-secondary" href="modules.php">Back</a>
         </div>
     </div>
 

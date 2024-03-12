@@ -294,7 +294,7 @@ $conn->close();
                     <div class="col-md-6 col-sm-6">
                         <form method="GET" action="allocate.php">
                             <div class="d-flex align-items-center">
-                                <input type="search" name="search_query" class="form-control me-2 test" placeholder="Search users" value="<?php echo htmlspecialchars($search_query); ?>">
+                                <input type="search" name="search_query" class="form-control me-2 test" placeholder="Search" value="<?php echo htmlspecialchars($search_query); ?>">
                                 <button type="submit" class="btn signature-btn search">Search</button>
                             </div>
                         </form>
