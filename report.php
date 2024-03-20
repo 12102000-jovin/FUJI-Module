@@ -183,6 +183,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         // Exclude result_id and duration from the headers
         unset($header['result_id']);
         unset($header['duration']);
+        unset($header['module_id']);
 
         fputcsv($output, array_keys($header));
 
@@ -196,6 +197,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
             // Exclude result_id and duration from the data
             unset($header['result_id']);
             unset($header['duration']);
+            unset($header['module_id']);
 
             // Replace the 'score' field with the modified score
             $header['score'] = $score;
@@ -211,6 +213,28 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
     $conn->close();
     exit(); // Exit to prevent the HTML content from being displayed
 }
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_result"])) {
+    $result_id = $_POST["result_id"];
+
+    // Perform the deletion query
+    $delete_user_answer = "DELETE FROM user_answers WHERE result_id = '$result_id'";
+    if ($conn->query($delete_user_answer) === TRUE) {
+        $delete_result = "DELETE FROM results WHERE result_id = '$result_id'";
+
+        if ($conn->query($delete_result) === TRUE) {
+            // Deletion successful
+            header("Location: {$_SERVER['PHP_SELF']}");
+            exit();
+        } else {
+            echo "Error: " . $conn->error;
+        }
+    } else {
+        // Error occurred during deletion
+        echo "Error: " . $conn->error;
+    }
+}
+
 
 
 $conn->close();
@@ -263,6 +287,10 @@ $conn->close();
                 padding: 5px;
                 font-size: 12px;
             }
+
+            .deleteButton {
+                font-size: 12px;
+            }
         }
 
         .table thead th {
@@ -297,7 +325,7 @@ $conn->close();
         <div class="d-flex justify-content-start mt-5">
             <a class="btn btn-secondary btn-sm rounded-5 back-btn" href="javascript:history.go(-1)"> <i class="fa-solid fa-arrow-left"></i> Back </a>
         </div>
-        <h1><strong> Report </strong></h1>
+        <h1><strong>MCQ Report </strong></h1>
     </div>
 
     <div class="container mt-3">
@@ -306,30 +334,31 @@ $conn->close();
                 <div class="row">
                     <div class="col-md-12">
                         <div class="input-group mb-3 mt-3 d-flex justify-content-center">
-                            <div class="input-group-prepend">
+                            <div class="input-group-prepend my-auto">
                                 <button class="btn signature-btn tooltips" type="button" id="toggleButton" data-bs-toggle="tooltip" data-bs-placement="top" title="Search by Date">
                                     <i class="fas fa-calendar"></i>
                                 </button>
                             </div>
-                            <div class="col-md-9 form-group" id="filterGroup">
+                            <div class="col-md-7 form-group my-auto" id="filterGroup">
                                 <input type="search" class="form-control" id="filterInput" name="searchTerm" placeholder="Search (Module/Name/Result)">
                             </div>
-                            <div class="col-md-9 form-group" id="dateGroup" style="display: none;">
+                            <div class="col-md-7 form-group my-auto" id="dateGroup" style="display: none;">
                                 <input type="date" class="form-control" id="dateInput" name="date">
                             </div>
-                            <div class="col-md-2 d-flex align-items-center">
-                                <button type="submit" class="btn signature-btn searchBtn" style="margin-left: 10px;">Search</button>
+                            <div class="col-md-2 d-flex align-items-center ">
+                                <button type="submit" class="btn signature-btn searchBtn" style="margin-left: 5px;">Search</button>
                             </div>
+                            <div class="d-flex mt-1 mt-sm-1">
+                                <label class="my-auto me-2"><strong>Show</strong></label>
+                                <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2 rounded-2" style="width: 70px">
+                                    <option value="5" <?php echo $recordsPerPage == 5 ? 'selected' : ''; ?>>5</option>
+                                    <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
+                                    <option value="15" <?php echo $recordsPerPage == 15 ? 'selected' : ''; ?>>15</option>
+                                </select>
+                                <label class="my-auto"><strong>entries</strong></label>
+                            </div>
+
                         </div>
-                    </div>
-                    <div class="col-md-12 d-flex align-items-center justify-content-center">
-                        <label class="my-auto me-2"><strong>Show</strong></label>
-                        <select id="recordsPerPage" name="recordsPerPage" class="form-select me-2" style="width: 70px">
-                            <option value="5" <?php echo $recordsPerPage == 5 ? 'selected' : ''; ?>>5</option>
-                            <option value="10" <?php echo $recordsPerPage == 10 ? 'selected' : ''; ?>>10</option>
-                            <option value="15" <?php echo $recordsPerPage == 15 ? 'selected' : ''; ?>>15</option>
-                        </select>
-                        <label><strong>entries</strong></label>
                     </div>
                 </div>
             </form>
@@ -344,7 +373,7 @@ $conn->close();
                             <th>Score</th>
                             <th>Date</th>
                             <!-- <th>Duration</th> -->
-                            <th>View</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody class="align-middle">
@@ -396,8 +425,17 @@ $conn->close();
                             //     echo "<td class='text-center align-middle'>" . $durationMinutes . "m" . "</td>";
                             // }
 
-                            echo "<td class='text-center align-middle'><a href='result-details.php?result_id=" . $result['result_id'] . "'><i class='fa-regular fa-rectangle-list signature-color tooltips data-bs-toggle='tooltip' data-bs-placement='top' title='See Answers'></i></a></td>";
-                            echo "</tr>";
+                            echo "<td class='text-center align-middle my-auto'>
+                            <div class='d-flex flex-column flex-md-row align-items-center justify-content-center'>
+                                <a href='result-details.php?result_id={$result['result_id']}' class='text-decoration-none'><i class='fa-regular fa-rectangle-list signature-color tooltips m-2' data-bs-toggle='tooltip' data-bs-placement='top' title='See Answers'></i></a>
+                                <form method='POST' class='mb-2 mb-md-0 ms-md-2'>
+                                    <input type='hidden' name='result_id' value='{$result['result_id']}'>
+                                    <button type='submit' name='delete_result' class='btn btn-link text-danger m-0 p-0 deleteButton' onclick='return confirm(\"Are you sure you want to delete this result?\");'>
+                                        <i class='fa-regular fa-trash-can tooltips m-2' data-bs-toggle='tooltip' data-bs-placement='top' title='Delete'></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>";
                         }
                         if (empty($results)) {
                             echo "<tr><td colspan='8' class='text-center'>No results found.</td></tr>";
@@ -631,7 +669,6 @@ $conn->close();
                 <p><strong>Name: </strong>${name}</p>
                 <p><strong>Score:</strong> ${score}</p>
                 <p><strong>Date: </strong>${date}</p>
-                <p><strong>Duration: </strong>${duration}</p>
             `;
         });
 

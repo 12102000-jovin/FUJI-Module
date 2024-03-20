@@ -135,7 +135,7 @@ $result->free();
 
     $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
 
-    $searchSql = "SELECT module_id, module_name, module_description, module_image FROM modules WHERE is_archived = false AND module_name LIKE '%$searchTerm%' LIMIT $offset, $recordsPerPage";
+    $searchSql = "SELECT module_id, module_name, module_description, module_image FROM modules WHERE is_archived = false AND module_name LIKE '%$searchTerm%' ORDER BY module_name ASC LIMIT $offset, $recordsPerPage";
     $modulesQuery = "
         SELECT 
             m.module_id, 
@@ -146,7 +146,7 @@ $result->free();
         LEFT JOIN module_allocation ma ON m.module_id = ma.module_id AND ma.employee_id = '$employee_id'
         WHERE m.is_archived = '0' AND ma.module_id IS NOT NULL AND m.module_name LIKE '%$searchTerm%'
         GROUP BY m.module_id, m.module_name, m.module_description, m.module_image
-        ORDER BY m.module_id, m.module_name ASC
+        ORDER BY m.module_name ASC
         LIMIT $offset, $recordsPerPage;
         ";
 
